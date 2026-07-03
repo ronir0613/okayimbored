@@ -1,0 +1,81 @@
+---
+import Layout from './Layout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  canonicalURL?: string | URL;
+  image?: string;
+  publishDate?: string;
+  modifiedDate?: string;
+  schema?: string;
+}
+
+const {
+  title,
+  description,
+  canonicalURL,
+  image = '/social-card.jpg',
+  publishDate = new Date().toISOString(),
+  modifiedDate = new Date().toISOString(),
+  schema
+} = Astro.props;
+
+// Generate Article Schema by default
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": title,
+  "description": description,
+  "image": [
+    new URL(image, Astro.url).href
+  ],
+  "datePublished": publishDate,
+  "dateModified": modifiedDate,
+  "author": [{
+      "@type": "Organization",
+      "name": "OkayImBored",
+      "url": "https://okayimbored.com"
+  }]
+};
+
+const finalSchema = schema || JSON.stringify(articleSchema);
+
+const seoMainClass = "w-full max-w-3xl mx-auto px-4 py-16 md:py-24 flex-1 flex flex-col items-start";
+---
+
+<Layout 
+  title={title}
+  description={description}
+  canonicalURL={canonicalURL}
+  image={image}
+  type="article"
+  schema={finalSchema}
+  mainClass={seoMainClass}
+>
+  <nav class="w-full mb-12 flex items-center justify-between opacity-60 hover:opacity-100 transition-opacity">
+    <a href="/" class="text-sm tracking-wider uppercase font-medium">← Back to OkayImBored</a>
+  </nav>
+
+  <article class="w-full prose prose-invert prose-p:text-white/80 prose-headings:text-white/95 prose-a:text-white prose-a:underline-offset-4 hover:prose-a:text-white/80 transition-colors prose-h1:text-4xl md:prose-h1:text-5xl prose-h1:font-medium prose-h1:tracking-tight prose-h2:mt-12 prose-h2:font-medium max-w-none">
+    <slot />
+  </article>
+
+  <footer class="w-full mt-24 pt-12 border-t border-white/10 flex flex-col items-center justify-center text-center space-y-6">
+    <div class="space-y-2">
+      <h3 class="text-xl font-medium">Still bored?</h3>
+      <p class="text-white/60">Spend one minute with us. No algorithms, no scrolling.</p>
+    </div>
+    <a href="/" class="px-6 py-3 bg-white text-black rounded-full font-medium hover:bg-white/90 transition-colors">
+      Experience OkayImBored
+    </a>
+    
+    <div class="flex flex-wrap items-center justify-center gap-4 text-sm text-white/40 pt-12">
+      <a href="/about" class="hover:text-white/80 transition-colors">About</a>
+      <a href="/faq" class="hover:text-white/80 transition-colors">FAQ</a>
+      <a href="/why-am-i-bored" class="hover:text-white/80 transition-colors">Why Am I Bored?</a>
+      <a href="/random-websites" class="hover:text-white/80 transition-colors">Random Websites</a>
+      <a href="/what-to-do-when-bored" class="hover:text-white/80 transition-colors">What To Do</a>
+    </div>
+  </footer>
+</Layout>

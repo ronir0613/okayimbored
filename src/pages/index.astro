@@ -1,8 +1,34 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { Experience } from '../components/Experience';
+
+const homepageSchema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://okayimbored.com/#website",
+      "url": "https://okayimbored.com/",
+      "name": "OkayImBored",
+      "description": "Bored? Spend one minute with us. Explore weird facts, tiny experiments, and surprisingly comforting internet experiences.",
+      "publisher": {
+        "@id": "https://okayimbored.com/#organization"
+      }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://okayimbored.com/#organization",
+      "name": "OkayImBored",
+      "url": "https://okayimbored.com/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://okayimbored.com/social-card.jpg"
+      }
+    }
+  ]
+};
 ---
 
-<Layout>
+<Layout schema={JSON.stringify(homepageSchema)}>
 	<Experience client:load />
 </Layout>

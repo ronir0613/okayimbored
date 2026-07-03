@@ -1,0 +1,43 @@
+---
+import SEOLayout from '../layouts/SEOLayout.astro';
+import FAQ from '../components/FAQ.astro';
+import { faqs } from '../data/faq';
+
+const title = "Frequently Asked Questions About Boredom | OkayImBored";
+const description = "Everything you've ever wondered about why you get bored, what to do when you're bored, and how boredom can actually be good for you.";
+
+// Generate FAQPage Schema
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(faq => ({
+    "@type": "Question",
+    "name": faq.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": faq.answer
+    }
+  }))
+};
+---
+
+<SEOLayout 
+  title={title} 
+  description={description}
+  schema={JSON.stringify(faqSchema)}
+>
+  <h1>Questions About Boredom</h1>
+  <p>
+    Boredom is a universal human experience, yet it often feels incredibly personal. When you're staring at the ceiling at 2am, or aimlessly scrolling through feeds you don't even care about, you might wonder: <em>Why am I like this?</em>
+  </p>
+  <p>
+    The truth is, your brain is doing exactly what it was designed to do. We've compiled the most common questions about boredom to help you understand this strange, uncomfortable, and deeply necessary state of mind.
+  </p>
+
+  <FAQ items={faqs} />
+  
+  <h2>The Science of Doing Nothing</h2>
+  <p>
+    It is important to remember that you do not always need to be productive. The modern world demands constant attention, but human biology requires rest. If you are feeling bored, the healthiest thing you can do might just be to sit and experience it.
+  </p>
+</SEOLayout>

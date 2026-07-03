@@ -4,11 +4,23 @@ import '../styles/global.css';
 interface Props {
   title?: string;
   description?: string;
+  canonicalURL?: string | URL;
+  image?: string;
+  type?: 'website' | 'article';
+  schema?: string;
+  noindex?: boolean;
+  mainClass?: string;
 }
 
 const { 
-  title = "okayimbored", 
-  description = "A tiny corner of the internet for when you're bored."
+  title = "OkayImBored — The Internet's Strange Little Place for Bored People", 
+  description = "Bored? Spend one minute with us. Explore weird facts, tiny experiments, random thoughts, and surprisingly comforting internet experiences.",
+  canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://okayimbored.com'),
+  image = '/social-card.jpg',
+  type = 'website',
+  schema,
+  noindex = false,
+  mainClass = "w-full max-w-2xl mx-auto px-4 py-8 sm:px-6 sm:py-12 flex-1 flex flex-col items-center justify-center"
 } = Astro.props;
 ---
 
@@ -24,8 +36,34 @@ const {
 		<meta name="apple-mobile-web-app-title" content="ImBored" />
 		<link rel="manifest" href="/site.webmanifest" />
 		<meta name="generator" content={Astro.generator} />
+		
+		<!-- Canonical URL -->
+		<link rel="canonical" href={canonicalURL} />
+		
+		<!-- SEO Meta Tags -->
 		<title>{title}</title>
 		<meta name="description" content={description} />
+		{noindex && <meta name="robots" content="noindex, nofollow" />}
+		{!noindex && <meta name="robots" content="index, follow" />}
+		
+		<!-- OpenGraph -->
+		<meta property="og:type" content={type} />
+		<meta property="og:url" content={canonicalURL} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:image" content={new URL(image, Astro.url)} />
+		<meta property="og:site_name" content="OkayImBored" />
+		<meta property="og:locale" content="en_US" />
+		
+		<!-- Twitter -->
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content={canonicalURL} />
+		<meta property="twitter:title" content={title} />
+		<meta property="twitter:description" content={description} />
+		<meta property="twitter:image" content={new URL(image, Astro.url)} />
+
+		<!-- JSON-LD Schema Injection -->
+		{schema && <script type="application/ld+json" set:html={schema} />}
 		
 		<!-- Preload the standard font we are simulating -->
 		<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,7 +71,7 @@ const {
 		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 	</head>
 	<body class="bg-[#0a0a0a] text-white/90 font-sans min-h-[100dvh] flex flex-col overflow-x-hidden selection:bg-white/10 selection:text-white">
-		<main class="w-full max-w-2xl mx-auto px-4 py-8 sm:px-6 sm:py-12 flex-1 flex flex-col items-center justify-center">
+		<main class={mainClass}>
 			<slot />
 		</main>
 	</body>
