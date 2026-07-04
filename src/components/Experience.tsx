@@ -9,10 +9,130 @@ export function Experience() {
   // Conversational questions state
   const [qStep, setQStep] = useState(0);
 
-  const nextStep = () => setStep(s => s + 1);
+  // Rare events state
+  const [isRareEventActive, setIsRareEventActive] = useState(false);
+  const [rareEventContent, setRareEventContent] = useState<{title: string, subtitle?: string} | null>(null);
+  const [hasSeenRareEvent, setHasSeenRareEvent] = useState(false);
+  const [lastInteraction, setLastInteraction] = useState(Date.now());
+
+  useEffect(() => {
+    // Initial rare event check (3:07 AM or chance)
+    const now = new Date();
+    const is3AM = now.getHours() === 3 && now.getMinutes() === 7;
+    const rand = Math.random();
+    
+    if ((is3AM || rand > 0.95) && !hasSeenRareEvent) {
+      setTimeout(() => {
+        setIsRareEventActive(true);
+        setRareEventContent({
+          title: "Congratulations.",
+          subtitle: `You are today's ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} visitor.`
+        });
+        setHasSeenRareEvent(true);
+      }, 5000); // show after 5 seconds of being on site
+    }
+  }, []);
+
+  // Idle timeout
+  useEffect(() => {
+    if (step > 1 && step < 7 && !isRareEventActive && !hasSeenRareEvent) {
+      const timer = setInterval(() => {
+        if (Date.now() - lastInteraction > 45000) { // 45 seconds idle
+          setIsRareEventActive(true);
+          setRareEventContent({
+            title: "The website has a question.",
+            subtitle: "Why did you stay?"
+          });
+          setHasSeenRareEvent(true);
+          clearInterval(timer);
+        }
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [step, lastInteraction, isRareEventActive, hasSeenRareEvent]);
+
+  const handleInteraction = () => {
+    setLastInteraction(Date.now());
+  };
+
+  const nextStep = () => {
+    handleInteraction();
+    setStep(s => s + 1);
+  };
+
+  if (isRareEventActive && rareEventContent) {
+    return (
+      <div className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px]" onClick={handleInteraction}>
+        <AnimatePresence mode="wait">
+          <ScreenTransition keyId="rare-event">
+            <div className="space-y-6 sm:space-y-8 px-4 sm:px-0">
+              <p className="text-xl sm:text-2xl md:text-3xl text-white/90 font-medium">
+                {rareEventContent.title}
+              </p>
+              {rareEventContent.subtitle && (
+                <p className="text-lg sm:text-xl text-white/50">
+                  {rareEventContent.subtitle}
+                </p>
+              )}
+              <button 
+                onClick={() => {
+                  setIsRareEventActive(false);
+                  setLastInteraction(Date.now());
+                }}
+                className="mt-8 text-xs sm:text-sm text-white/30 hover:text-white/60 transition-colors uppercase tracking-widest"
+              >
+                Return
+              </button>
+            </div>
+          </ScreenTransition>
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  const renderPathContent = () => {
+    switch (desiredContent) {
+      case 'Something nice':
+        return (
+          <>
+            <p className="text-xl sm:text-2xl text-white/90">You don't have to make tonight productive.</p>
+            <p className="text-lg sm:text-xl text-white/50">You're allowed to have a forgettable day.</p>
+            <p className="text-lg sm:text-xl text-white/50 pt-2">Most evenings don't become memories.</p>
+          </>
+        );
+      case 'Something honest':
+        return (
+          <>
+            <p className="text-xl sm:text-2xl text-white/90">You probably didn't come here because you wanted entertainment.</p>
+            <p className="text-lg sm:text-xl text-white/50">You might just be postponing tomorrow.</p>
+            <p className="text-lg sm:text-xl text-white/50 pt-2">You don't need another recommendation.</p>
+          </>
+        );
+      case 'Something strange':
+        return (
+          <>
+            <p className="text-xl sm:text-2xl text-white/90">Do fish know when it's raining?</p>
+            <p className="text-lg sm:text-xl text-white/50">Would your 12-year-old self trust you?</p>
+            <p className="text-lg sm:text-xl text-white/50 pt-2">The cat has left the interview.</p>
+          </>
+        );
+      case 'Surprise me':
+        return (
+          <>
+            <p className="text-xl sm:text-2xl text-white/90">You have officially spent longer here than we expected.</p>
+            <p className="text-lg sm:text-xl text-white/50">There are no achievements for this.</p>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px]">
+    <div 
+      className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px]"
+      onClick={handleInteraction}
+    >
       <AnimatePresence mode="wait">
         
         {/* SCREEN 1 */}
@@ -43,10 +163,13 @@ export function Experience() {
           <ScreenTransition keyId="s2">
             <div className="space-y-6 sm:space-y-8 px-4 sm:px-0">
               <p className="text-lg sm:text-xl md:text-2xl text-white/80 font-medium italic">
-                84% of visitors today said they were bored.
+                84% of visitors tonight said they were bored.
+              </p>
+              <p className="text-lg sm:text-xl md:text-2xl text-white/80 font-medium italic pt-2">
+                16% claimed they were "just checking something."
               </p>
               <p className="text-base sm:text-lg text-white/50 max-w-sm mx-auto leading-relaxed">
-                Humans often search for entertainment when they're actually searching for novelty.
+                We don't believe them.
               </p>
               <button 
                 onClick={nextStep}
@@ -66,7 +189,7 @@ export function Experience() {
                 Cats ignore approximately 93% of human requests.
               </p>
               <p className="text-base sm:text-lg text-white/50 max-w-sm mx-auto leading-relaxed">
-                Boredom is often your brain asking for something unexpected.
+                Nobody has ever asked the website if it's bored.
               </p>
               <button 
                 onClick={nextStep}
@@ -89,7 +212,10 @@ export function Experience() {
                     {['Late at night', 'Middle of the day', 'Early morning'].map(t => (
                       <button 
                         key={t}
-                        onClick={() => setQStep(1)}
+                        onClick={() => {
+                          handleInteraction();
+                          setQStep(1);
+                        }}
                         className="w-full px-4 sm:px-6 py-3 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
                       >
                         {t}
@@ -100,12 +226,15 @@ export function Experience() {
               )}
               {qStep === 1 && (
                 <>
-                  <p className="text-xl sm:text-2xl text-white/90">Are you looking for comfort or distraction?</p>
+                  <p className="text-xl sm:text-2xl text-white/90">Are you alone right now?</p>
                   <div className="flex flex-col gap-3 max-w-xs mx-auto w-full">
-                    {['Comfort', 'Distraction', 'I don\'t know'].map(t => (
+                    {['Yes', 'No', 'Sort of'].map(t => (
                       <button 
                         key={t}
-                        onClick={() => setQStep(2)}
+                        onClick={() => {
+                          handleInteraction();
+                          setQStep(2);
+                        }}
                         className="w-full px-4 sm:px-6 py-3 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
                       >
                         {t}
@@ -116,12 +245,12 @@ export function Experience() {
               )}
               {qStep === 2 && (
                 <>
-                  <p className="text-xl sm:text-2xl text-white/90">How long have you been scrolling?</p>
+                  <p className="text-xl sm:text-2xl text-white/90">Are you looking for comfort or distraction?</p>
                   <div className="flex flex-col gap-3 max-w-xs mx-auto w-full">
-                    {['A few minutes', 'Too long', 'Just started'].map(t => (
+                    {['Comfort', 'Distraction', 'I don\'t know'].map(t => (
                       <button 
                         key={t}
-                        onClick={nextStep} // Moves to Screen 5 unexpectedly on click
+                        onClick={nextStep}
                         className="w-full px-4 sm:px-6 py-3 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
                       >
                         {t}
@@ -160,7 +289,7 @@ export function Experience() {
             <div className="space-y-6 sm:space-y-8 px-4 sm:px-0 w-full">
               <p className="text-2xl sm:text-3xl text-white/90">What do you want to hear?</p>
               <div className="flex flex-col gap-4 max-w-xs mx-auto w-full">
-                {['Something nice', 'Something honest', 'Something strange'].map(choice => (
+                {['Something nice', 'Something honest', 'Something strange', 'Surprise me'].map(choice => (
                   <button 
                     key={choice}
                     onClick={() => {
@@ -182,24 +311,7 @@ export function Experience() {
           <ScreenTransition keyId="s7">
             <div className="space-y-8 sm:space-y-12 px-4 sm:px-0 w-full">
               <div className="space-y-3 sm:space-y-4">
-                {desiredContent === 'Something nice' && (
-                  <>
-                    <p className="text-xl sm:text-2xl text-white/90">You probably don't need another video.</p>
-                    <p className="text-lg sm:text-xl text-white/50">You probably need permission to stop searching.</p>
-                  </>
-                )}
-                {desiredContent === 'Something honest' && (
-                  <>
-                    <p className="text-xl sm:text-2xl text-white/90">You may not be avoiding boredom.</p>
-                    <p className="text-lg sm:text-xl text-white/50">You may be avoiding choosing what to do next.</p>
-                  </>
-                )}
-                {desiredContent === 'Something strange' && (
-                  <>
-                    <p className="text-xl sm:text-2xl text-white/90">You don't sound bored.</p>
-                    <p className="text-lg sm:text-xl text-white/50">You sound tired.</p>
-                  </>
-                )}
+                {renderPathContent()}
               </div>
               
               <div className="h-[1px] w-12 bg-white/10 mx-auto" />
