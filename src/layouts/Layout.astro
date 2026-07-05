@@ -1,6 +1,8 @@
 ---
 import '../styles/global.css';
 import MicroWidget from '../components/MicroWidget';
+import RecordPlayer from '../components/RecordPlayer';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
   title?: string;
@@ -37,6 +39,7 @@ const {
 		<meta name="apple-mobile-web-app-title" content="ImBored" />
 		<link rel="manifest" href="/site.webmanifest" />
 		<meta name="generator" content={Astro.generator} />
+		<ClientRouter />
 		
 		<!-- Canonical URL -->
 		<link rel="canonical" href={canonicalURL} />
@@ -75,6 +78,7 @@ const {
 		<main class={mainClass}>
 			<slot />
 		</main>
+		<RecordPlayer client:load transition:persist="record-player" />
 		<MicroWidget client:idle />
 	</body>
 </html>
