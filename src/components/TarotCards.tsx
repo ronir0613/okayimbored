@@ -2,19 +2,23 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ALL_CARDS = [
-  { title: "THE PAUSE", description: "you stayed longer\nthan most people.\n\ntake a breath." },
-  { title: "THE WINDOW", description: "you should probably\nlook outside tonight.\n\nseriously." },
-  { title: "THE CAT", description: "the cat disagrees\nwith your life choices.\n\nnot helpful,\nwe know." },
-  { title: "THE DETOUR", description: "you're not lost.\n\nyou just took\na weird turn." },
-  { title: "THE MEMORY", description: "something from\nyour childhood\nstill exists.\n\ngo find it." },
-  { title: "THE QUESTION", description: "you ask\ngood questions.\n\nthat's rare." },
-  { title: "THE NOTHING", description: "sometimes\nnothing\nis the answer.\n\nthat's okay too." }
+  { title: "THE CHAIR", description: "This card appeared\n{count} times tonight." },
+  { title: "THE WINDOW", description: "Nobody picked this\nfor 37 minutes." }, // Static for now as requested by user example
+  { title: "THE DOG", description: "The dog approves." },
+  { title: "THE CAT", description: "The cat selected this earlier." },
+  { title: "THE BUTTON", description: "There was supposed\nto be a button here." },
+  { title: "THE TUESDAY", description: "This doesn't feel\nlike a Tuesday card." },
+  { title: "THE MAP", description: "Three people from your country\npicked this tonight." },
+  { title: "THE NOTHING", description: "This card contains\nalmost nothing." },
+  { title: "THE WAITING ROOM", description: "This card was waiting\nfor somebody." },
+  { title: "THE DESKTOP", description: "You probably have\ntoo many tabs open." }
 ];
 
-export function TarotCards({ onComplete }: { onComplete: () => void }) {
+export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, sessionId?: string }) {
   const [cards, setCards] = useState<typeof ALL_CARDS>([]);
   const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
+  const [cardStats, setCardStats] = useState<number | null>(null);
 
   useEffect(() => {
     // Pick 3 random unique cards
@@ -22,14 +26,43 @@ export function TarotCards({ onComplete }: { onComplete: () => void }) {
     setCards(shuffled.slice(0, 3));
   }, []);
 
-  const handleCardClick = (idx: number) => {
+  const handleCardClick = async (idx: number) => {
     if (selectedCardIdx !== null) return;
     setSelectedCardIdx(idx);
     
+    const pickedCard = cards[idx];
+
+    // Fire API call in background
+    if (sessionId) {
+      try {
+        const res = await fetch('/api/card', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, cardName: pickedCard.title })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCardStats(data.count);
+        }
+      } catch (e) {
+        console.error("Failed to record card pick", e);
+      }
+    } else {
+       // Mock for testing
+       setCardStats(Math.floor(Math.random() * 50) + 1);
+    }
+
     // Slow flip effect
     setTimeout(() => {
       setIsRevealed(true);
     }, 600);
+  };
+
+  const renderDescription = (desc: string, count: number | null) => {
+    if (desc.includes('{count}')) {
+      return desc.replace('{count}', (count !== null ? count.toString() : '...'));
+    }
+    return desc;
   };
 
   return (
@@ -120,7 +153,7 @@ export function TarotCards({ onComplete }: { onComplete: () => void }) {
                     {card.title}
                   </h3>
                   <p className="text-[9px] sm:text-[10px] md:text-xs text-white/60 whitespace-pre-line leading-relaxed">
-                    {card.description}
+                    {renderDescription(card.description, isSelected ? cardStats : null)}
                   </p>
                 </div>
               </motion.div>

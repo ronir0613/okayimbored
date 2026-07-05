@@ -18,6 +18,10 @@ export function Experience() {
   const [lastInteraction, setLastInteraction] = useState(Date.now());
   const [activeStickers, setActiveStickers] = useState<StickerConfig[]>([]);
 
+  // V4 specific state
+  const [sessionId, setSessionId] = useState<string | undefined>();
+  const [stats, setStats] = useState({ boredPercentage: 84, activeVisitors: 1 });
+
   const addSticker = (imagePath: string, text: string, position: { left: string, top: string }, rotation?: number) => {
     const id = Date.now().toString() + Math.random();
     setActiveStickers(prev => [...prev, { id, imagePath, text, position, rotation }]);
@@ -26,13 +30,13 @@ export function Experience() {
     }, 6000);
   };
 
+  // 1. Initial rare event check
   useEffect(() => {
-    // Initial rare event check (3:07 AM or chance)
     const now = new Date();
     const is3AM = now.getHours() === 3 && now.getMinutes() === 7;
     const rand = Math.random();
     
-    if ((is3AM || rand > 0.92) && !hasSeenRareEvent) {
+    if (is3AM || rand > 0.92) {
       setTimeout(() => {
         setIsRareEventActive(true);
         const rareEventsList = [
@@ -44,9 +48,51 @@ export function Experience() {
         ];
         setRareEventContent(rareEventsList[Math.floor(Math.random() * rareEventsList.length)]);
         setHasSeenRareEvent(true);
-      }, 5000); // show after 5 seconds of being on site
+      }, 5000);
     }
-  }, []);
+  }, []); // Run once on mount
+
+  // 2. Initialize session
+  useEffect(() => {
+    fetch('/api/session', { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.sessionId) setSessionId(data.sessionId);
+        if (data.message) {
+          // Show country moment slightly later to not overlap
+          setTimeout(() => {
+            setIsRareEventActive(prev => {
+              if (!prev) {
+                setRareEventContent({ title: data.message });
+                setHasSeenRareEvent(true);
+                return true;
+              }
+              return prev;
+            });
+          }, 8000);
+        }
+      }).catch(console.error);
+  }, []); // Run once on mount
+
+  // 3. Fetch stats periodically and update time
+  useEffect(() => {
+    const fetchStats = () => {
+      fetch(`/api/stats${sessionId ? `?sessionId=${sessionId}` : ''}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.boredPercentage) {
+            setStats(data);
+          }
+        }).catch(console.error);
+    };
+    
+    fetchStats();
+    const statTimer = setInterval(fetchStats, 60000);
+
+    return () => {
+      clearInterval(statTimer);
+    };
+  }, [sessionId]); // Re-run if sessionId changes (which happens once after init)
 
   // Idle timeout
   useEffect(() => {
@@ -66,8 +112,27 @@ export function Experience() {
     }
   }, [step, lastInteraction, isRareEventActive, hasSeenRareEvent]);
 
-  const handleInteraction = () => {
+  const handleInteraction = (stepName?: string, value?: string) => {
     setLastInteraction(Date.now());
+    if (sessionId && stepName && value) {
+      fetch('/api/interact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, stepName, value })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.trace && !isRareEventActive && !hasSeenRareEvent && Math.random() > 0.6) {
+          // Occasional live trace popup
+          setTimeout(() => {
+            setIsRareEventActive(true);
+            setRareEventContent({ title: data.trace, subtitle: "We thought you should know." });
+            setHasSeenRareEvent(true);
+          }, 3000);
+        }
+      })
+      .catch(console.error);
+    }
   };
 
   const nextStep = () => {
@@ -146,9 +211,10 @@ export function Experience() {
   return (
     <div 
       className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px]"
-      onClick={handleInteraction}
+      onClick={() => handleInteraction()}
     >
       <Stickers activeStickers={activeStickers} />
+
       <AnimatePresence mode="wait">
         
         {/* SCREEN 1 */}
@@ -160,6 +226,7 @@ export function Experience() {
             <div className="flex gap-4 sm:gap-6 justify-center">
               <button 
                 onClick={() => {
+                  handleInteraction('are_you_bored', 'Yes');
                   if (Math.random() > 0.7) addSticker('/stickers/peeking-cat.png', "consulting the cat...", { left: '50%', top: '15%' }, 0);
                   nextStep();
                 }}
@@ -169,6 +236,7 @@ export function Experience() {
               </button>
               <button 
                 onClick={() => {
+                  handleInteraction('are_you_bored', 'No');
                   if (Math.random() > 0.7) addSticker('/stickers/peeking-cat.png', "consulting the cat...", { left: '50%', top: '15%' }, 0);
                   nextStep();
                 }}
@@ -185,10 +253,10 @@ export function Experience() {
           <ScreenTransition keyId="s2">
             <div className="space-y-6 sm:space-y-8 px-4 sm:px-0">
               <p className="text-lg sm:text-xl md:text-2xl text-white/80 font-medium italic">
-                84% of visitors tonight said they were bored.
+                {stats.boredPercentage}% of visitors tonight said they were bored.
               </p>
               <p className="text-lg sm:text-xl md:text-2xl text-white/80 font-medium italic pt-2">
-                16% claimed they were "just checking something."
+                {100 - stats.boredPercentage}% claimed they were "just checking something."
               </p>
               <p className="text-base sm:text-lg text-white/50 max-w-sm mx-auto leading-relaxed">
                 We don't believe them.
@@ -235,7 +303,7 @@ export function Experience() {
                       <button 
                         key={t}
                         onClick={() => {
-                          handleInteraction();
+                          handleInteraction('time_of_day', t);
                           if (t === 'Late at night') addSticker('/stickers/sleepy-dog.png', "it's late. the dog is asleep.", { left: '75%', top: '25%' }, 10);
                           setQStep(1);
                         }}
@@ -255,7 +323,7 @@ export function Experience() {
                       <button 
                         key={t}
                         onClick={() => {
-                          handleInteraction();
+                          handleInteraction('alone', t);
                           setQStep(2);
                         }}
                         className="w-full px-4 sm:px-6 py-3 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
@@ -274,6 +342,7 @@ export function Experience() {
                       <button 
                         key={t}
                         onClick={() => {
+                          handleInteraction('seeking', t);
                           if (t === 'Comfort') addSticker('/stickers/sitting-puppy.png', "thanks for being real.", { left: '20%', top: '35%' }, -15);
                           else if (t === 'Distraction') addSticker('/stickers/angry-cat.png', "the cat is judging you.", { left: '80%', top: '30%' }, 5);
                           nextStep();
@@ -313,7 +382,7 @@ export function Experience() {
         {/* SCREEN 6: Tarot Cards */}
         {step === 6 && (
           <ScreenTransition keyId="s6-cards">
-            <TarotCards onComplete={nextStep} />
+            <TarotCards onComplete={nextStep} sessionId={sessionId} />
           </ScreenTransition>
         )}
 
@@ -328,6 +397,7 @@ export function Experience() {
                   <button 
                     key={choice}
                     onClick={() => {
+                      handleInteraction('desired_content', choice);
                       setDesiredContent(choice);
                       nextStep();
                     }}

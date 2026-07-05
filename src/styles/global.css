@@ -3,6 +3,12 @@
 
 @theme {
   --font-sans: "Inter", "Geist", system-ui, sans-serif;
+  --animate-breath: breath 6s ease-in-out infinite;
+}
+
+@keyframes breath {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.9; }
 }
 
 body {
