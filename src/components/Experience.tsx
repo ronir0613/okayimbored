@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ScreenTransition } from './ScreenTransition';
+import { TarotCards } from './TarotCards';
+import { Stickers, type StickerConfig } from './Stickers';
 
 export function Experience() {
   const [step, setStep] = useState(1);
@@ -14,6 +16,15 @@ export function Experience() {
   const [rareEventContent, setRareEventContent] = useState<{title: string, subtitle?: string} | null>(null);
   const [hasSeenRareEvent, setHasSeenRareEvent] = useState(false);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
+  const [activeStickers, setActiveStickers] = useState<StickerConfig[]>([]);
+
+  const addSticker = (imagePath: string, text: string, position: { left: string, top: string }, rotation?: number) => {
+    const id = Date.now().toString() + Math.random();
+    setActiveStickers(prev => [...prev, { id, imagePath, text, position, rotation }]);
+    setTimeout(() => {
+      setActiveStickers(prev => prev.filter(s => s.id !== id));
+    }, 6000);
+  };
 
   useEffect(() => {
     // Initial rare event check (3:07 AM or chance)
@@ -21,13 +32,17 @@ export function Experience() {
     const is3AM = now.getHours() === 3 && now.getMinutes() === 7;
     const rand = Math.random();
     
-    if ((is3AM || rand > 0.95) && !hasSeenRareEvent) {
+    if ((is3AM || rand > 0.92) && !hasSeenRareEvent) {
       setTimeout(() => {
         setIsRareEventActive(true);
-        setRareEventContent({
-          title: "Congratulations.",
-          subtitle: `You are today's ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} visitor.`
-        });
+        const rareEventsList = [
+          { title: "Congratulations.", subtitle: `You are today's ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} visitor.` },
+          { title: "The card deck is feeling chaotic today.", subtitle: "Go with it." },
+          { title: "You opened this at the perfect time.", subtitle: "We don't know why, but you did." },
+          { title: "The cat walked across the keyboard.", subtitle: "ajsdnfklasdjbf" },
+          { title: "Something weird is about to happen.", subtitle: "Just wait." }
+        ];
+        setRareEventContent(rareEventsList[Math.floor(Math.random() * rareEventsList.length)]);
         setHasSeenRareEvent(true);
       }, 5000); // show after 5 seconds of being on site
     }
@@ -35,7 +50,7 @@ export function Experience() {
 
   // Idle timeout
   useEffect(() => {
-    if (step > 1 && step < 7 && !isRareEventActive && !hasSeenRareEvent) {
+    if (step > 1 && step < 8 && !isRareEventActive && !hasSeenRareEvent) {
       const timer = setInterval(() => {
         if (Date.now() - lastInteraction > 45000) { // 45 seconds idle
           setIsRareEventActive(true);
@@ -133,6 +148,7 @@ export function Experience() {
       className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px]"
       onClick={handleInteraction}
     >
+      <Stickers activeStickers={activeStickers} />
       <AnimatePresence mode="wait">
         
         {/* SCREEN 1 */}
@@ -143,13 +159,19 @@ export function Experience() {
             </h1>
             <div className="flex gap-4 sm:gap-6 justify-center">
               <button 
-                onClick={nextStep}
+                onClick={() => {
+                  if (Math.random() > 0.7) addSticker('/stickers/peeking-cat.png', "consulting the cat...", { left: '50%', top: '15%' }, 0);
+                  nextStep();
+                }}
                 className="px-6 py-2 rounded-full border border-white/10 hover:bg-white/5 hover:border-white/20 transition-all duration-300 text-white/70 hover:text-white"
               >
                 Yes
               </button>
               <button 
-                onClick={nextStep}
+                onClick={() => {
+                  if (Math.random() > 0.7) addSticker('/stickers/peeking-cat.png', "consulting the cat...", { left: '50%', top: '15%' }, 0);
+                  nextStep();
+                }}
                 className="px-6 py-2 rounded-full border border-white/10 hover:bg-white/5 hover:border-white/20 transition-all duration-300 text-white/70 hover:text-white"
               >
                 No
@@ -214,6 +236,7 @@ export function Experience() {
                         key={t}
                         onClick={() => {
                           handleInteraction();
+                          if (t === 'Late at night') addSticker('/stickers/sleepy-dog.png', "it's late. the dog is asleep.", { left: '75%', top: '25%' }, 10);
                           setQStep(1);
                         }}
                         className="w-full px-4 sm:px-6 py-3 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
@@ -250,7 +273,11 @@ export function Experience() {
                     {['Comfort', 'Distraction', 'I don\'t know'].map(t => (
                       <button 
                         key={t}
-                        onClick={nextStep}
+                        onClick={() => {
+                          if (t === 'Comfort') addSticker('/stickers/sitting-puppy.png', "thanks for being real.", { left: '20%', top: '35%' }, -15);
+                          else if (t === 'Distraction') addSticker('/stickers/angry-cat.png', "the cat is judging you.", { left: '80%', top: '30%' }, 5);
+                          nextStep();
+                        }}
                         className="w-full px-4 sm:px-6 py-3 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
                       >
                         {t}
@@ -283,10 +310,18 @@ export function Experience() {
           </ScreenTransition>
         )}
 
-        {/* SCREEN 6 */}
+        {/* SCREEN 6: Tarot Cards */}
         {step === 6 && (
-          <ScreenTransition keyId="s6">
+          <ScreenTransition keyId="s6-cards">
+            <TarotCards onComplete={nextStep} />
+          </ScreenTransition>
+        )}
+
+        {/* SCREEN 7 */}
+        {step === 7 && (
+          <ScreenTransition keyId="s7">
             <div className="space-y-6 sm:space-y-8 px-4 sm:px-0 w-full">
+              <p className="text-sm sm:text-base text-white/50 italic mb-2">The card chose you. Now you choose.</p>
               <p className="text-2xl sm:text-3xl text-white/90">What do you want to hear?</p>
               <div className="flex flex-col gap-4 max-w-xs mx-auto w-full">
                 {['Something nice', 'Something honest', 'Something strange', 'Surprise me'].map(choice => (
@@ -306,9 +341,9 @@ export function Experience() {
           </ScreenTransition>
         )}
 
-        {/* SCREEN 7 & OUTRO */}
-        {step === 7 && (
-          <ScreenTransition keyId="s7">
+        {/* SCREEN 8 & OUTRO */}
+        {step === 8 && (
+          <ScreenTransition keyId="s8">
             <div className="space-y-8 sm:space-y-12 px-4 sm:px-0 w-full">
               <div className="space-y-3 sm:space-y-4">
                 {renderPathContent()}
