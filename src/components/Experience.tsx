@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ScreenTransition } from './ScreenTransition';
 import { TarotCards } from './TarotCards';
+import { ArchaeologyEvent } from './ArchaeologyEvent';
+import { getRandomArtifact, type Artifact } from '../lib/archaeology';
 export function Experience() {
   const [step, setStep] = useState(1);
   const [desiredContent, setDesiredContent] = useState<string>('');
@@ -14,6 +16,10 @@ export function Experience() {
   const [rareEventContent, setRareEventContent] = useState<{title: string, subtitle?: string} | null>(null);
   const [hasSeenRareEvent, setHasSeenRareEvent] = useState(false);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
+
+  // Archaeology events state
+  const [isArchaeologyActive, setIsArchaeologyActive] = useState(false);
+  const [archaeologyContent, setArchaeologyContent] = useState<Artifact | null>(null);
 
   // V4 specific state
   const [sessionId, setSessionId] = useState<string | undefined>();
@@ -132,6 +138,13 @@ export function Experience() {
 
   const nextStep = () => {
     handleInteraction();
+
+    // Occasional internet archaeology interruption (5% chance)
+    if (step > 1 && step < 7 && !isRareEventActive && !isArchaeologyActive && Math.random() < 0.05) {
+      setArchaeologyContent(getRandomArtifact());
+      setIsArchaeologyActive(true);
+    }
+
     setStep(s => s + 1);
   };
 
@@ -162,6 +175,18 @@ export function Experience() {
           </ScreenTransition>
         </AnimatePresence>
       </div>
+    );
+  }
+
+  if (isArchaeologyActive && archaeologyContent) {
+    return (
+      <ArchaeologyEvent 
+        artifact={archaeologyContent} 
+        onReturn={() => {
+          setIsArchaeologyActive(false);
+          setLastInteraction(Date.now());
+        }} 
+      />
     );
   }
 
