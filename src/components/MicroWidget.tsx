@@ -67,15 +67,17 @@ export default function MicroWidget() {
 
   return (
     <div 
+      id="timestamp-widget"
       className={`fixed bottom-4 right-4 md:bottom-6 md:right-6 z-0 pointer-events-none transition-opacity duration-[3000ms] ${mounted ? 'opacity-70' : 'opacity-0'}`}
       style={{
         fontFamily: "'Space Mono', monospace",
       }}
     >
-      <div className="flex flex-col items-center justify-center animate-[breath_6s_ease-in-out_infinite]">
+      <div className="flex flex-col items-center justify-center animate-[breath_6s_ease-in-out_infinite] relative">
         
+
         {/* 4 Time Boxes */}
-        <div className="flex gap-1 mb-1.5" style={{ perspective: '1000px' }}>
+        <div className="flex gap-1 mb-1.5 z-10 relative" style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}>
           {displayState.chars.map((char, index) => (
              <FlipBox key={index} char={char} />
           ))}
@@ -83,7 +85,7 @@ export default function MicroWidget() {
         
         {/* Month Box */}
         <div 
-          className="w-full border border-[#a5b4fc]/30 bg-black/40 rounded px-2 py-1.5 flex flex-col items-center justify-center shadow-[0_0_8px_rgba(165,180,252,0.1)]"
+          className="w-full border border-[#a5b4fc]/30 bg-black/40 rounded px-2 py-1.5 flex flex-col items-center justify-center shadow-[0_0_8px_rgba(165,180,252,0.1)] relative z-0"
           style={{
             textShadow: '0 0 4px rgba(165,180,252,0.4)',
           }}
@@ -98,7 +100,10 @@ export default function MicroWidget() {
 
 function FlipBox({ char }: { char: string }) {
   return (
-    <div className="relative w-7 h-9 border border-[#fef08a]/20 rounded bg-black/40 overflow-hidden shadow-[0_0_8px_rgba(254,240,138,0.05)] flex items-center justify-center">
+    <div 
+      className="relative w-7 h-9 border border-[#fef08a]/20 rounded bg-black/40 overflow-hidden shadow-[0_0_8px_rgba(254,240,138,0.05)] flex items-center justify-center"
+      style={{ transform: 'translateZ(10px)' }}
+    >
       <AnimatePresence mode="popLayout">
         <motion.span
           key={char}

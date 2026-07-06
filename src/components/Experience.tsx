@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ScreenTransition } from './ScreenTransition';
 import { TarotCards } from './TarotCards';
-import { Stickers, type StickerConfig } from './Stickers';
-
 export function Experience() {
   const [step, setStep] = useState(1);
   const [desiredContent, setDesiredContent] = useState<string>('');
@@ -16,20 +14,10 @@ export function Experience() {
   const [rareEventContent, setRareEventContent] = useState<{title: string, subtitle?: string} | null>(null);
   const [hasSeenRareEvent, setHasSeenRareEvent] = useState(false);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
-  const [activeStickers, setActiveStickers] = useState<StickerConfig[]>([]);
 
   // V4 specific state
   const [sessionId, setSessionId] = useState<string | undefined>();
   const [stats, setStats] = useState({ boredPercentage: 84, activeVisitors: 1 });
-
-  const addSticker = (imagePath: string, text: string, position: { left: string, top: string }, rotation?: number) => {
-    const id = Date.now().toString() + Math.random();
-    setActiveStickers(prev => [...prev, { id, imagePath, text, position, rotation }]);
-    setTimeout(() => {
-      setActiveStickers(prev => prev.filter(s => s.id !== id));
-    }, 6000);
-  };
-
   // 1. Initial rare event check
   useEffect(() => {
     const now = new Date();
@@ -112,6 +100,13 @@ export function Experience() {
     }
   }, [step, lastInteraction, isRareEventActive, hasSeenRareEvent]);
 
+  // Final screen event
+  useEffect(() => {
+    if (step === 8) {
+      window.dispatchEvent(new CustomEvent('cat:final_screen'));
+    }
+  }, [step]);
+
   const handleInteraction = (stepName?: string, value?: string) => {
     setLastInteraction(Date.now());
     if (sessionId && stepName && value) {
@@ -142,7 +137,7 @@ export function Experience() {
 
   if (isRareEventActive && rareEventContent) {
     return (
-      <div className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px]" onClick={handleInteraction}>
+      <div className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px]" onClick={() => handleInteraction()}>
         <AnimatePresence mode="wait">
           <ScreenTransition keyId="rare-event">
             <div className="space-y-6 sm:space-y-8 px-4 sm:px-0">
@@ -213,8 +208,6 @@ export function Experience() {
       className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px]"
       onClick={() => handleInteraction()}
     >
-      <Stickers activeStickers={activeStickers} />
-
       <AnimatePresence mode="wait">
         
         {/* SCREEN 1 */}
@@ -227,20 +220,18 @@ export function Experience() {
               <button 
                 onClick={() => {
                   handleInteraction('are_you_bored', 'Yes');
-                  if (Math.random() > 0.7) addSticker('/stickers/peeking-cat.png', "consulting the cat...", { left: '50%', top: '15%' }, 0);
                   nextStep();
                 }}
-                className="px-6 py-2 rounded-full border border-white/10 hover:bg-white/5 hover:border-white/20 transition-all duration-300 text-white/70 hover:text-white"
+                className="px-6 py-2 rounded-full hover:bg-white/5 transition-all duration-300 text-white/70 hover:text-white"
               >
                 Yes
               </button>
               <button 
                 onClick={() => {
                   handleInteraction('are_you_bored', 'No');
-                  if (Math.random() > 0.7) addSticker('/stickers/peeking-cat.png', "consulting the cat...", { left: '50%', top: '15%' }, 0);
                   nextStep();
                 }}
-                className="px-6 py-2 rounded-full border border-white/10 hover:bg-white/5 hover:border-white/20 transition-all duration-300 text-white/70 hover:text-white"
+                className="px-6 py-2 rounded-full hover:bg-white/5 transition-all duration-300 text-white/70 hover:text-white"
               >
                 No
               </button>
@@ -251,7 +242,7 @@ export function Experience() {
         {/* SCREEN 2 */}
         {step === 2 && (
           <ScreenTransition keyId="s2">
-            <div className="space-y-6 sm:space-y-8 px-4 sm:px-0">
+            <div id="statistics-content" className="space-y-6 sm:space-y-8 px-4 sm:px-0">
               <p className="text-lg sm:text-xl md:text-2xl text-white/80 font-medium italic">
                 {stats.boredPercentage}% of visitors tonight said they were bored.
               </p>
@@ -304,10 +295,9 @@ export function Experience() {
                         key={t}
                         onClick={() => {
                           handleInteraction('time_of_day', t);
-                          if (t === 'Late at night') addSticker('/stickers/sleepy-dog.png', "it's late. the dog is asleep.", { left: '75%', top: '25%' }, 10);
                           setQStep(1);
                         }}
-                        className="w-full px-4 sm:px-6 py-3 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
+                        className="w-full px-4 sm:px-6 py-3 rounded-xl hover:bg-white/5 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
                       >
                         {t}
                       </button>
@@ -326,7 +316,7 @@ export function Experience() {
                           handleInteraction('alone', t);
                           setQStep(2);
                         }}
-                        className="w-full px-4 sm:px-6 py-3 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
+                        className="w-full px-4 sm:px-6 py-3 rounded-xl hover:bg-white/5 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
                       >
                         {t}
                       </button>
@@ -343,11 +333,9 @@ export function Experience() {
                         key={t}
                         onClick={() => {
                           handleInteraction('seeking', t);
-                          if (t === 'Comfort') addSticker('/stickers/sitting-puppy.png', "thanks for being real.", { left: '20%', top: '35%' }, -15);
-                          else if (t === 'Distraction') addSticker('/stickers/angry-cat.png', "the cat is judging you.", { left: '80%', top: '30%' }, 5);
                           nextStep();
                         }}
-                        className="w-full px-4 sm:px-6 py-3 rounded-xl border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
+                        className="w-full px-4 sm:px-6 py-3 rounded-xl hover:bg-white/5 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
                       >
                         {t}
                       </button>
@@ -397,11 +385,17 @@ export function Experience() {
                   <button 
                     key={choice}
                     onClick={() => {
+                      if (choice === 'Something honest') {
+                        window.dispatchEvent(new CustomEvent('cat:honest_choice'));
+                      }
+                      if (choice === 'Something strange') {
+                        window.dispatchEvent(new CustomEvent('cat:strange_choice'));
+                      }
                       handleInteraction('desired_content', choice);
                       setDesiredContent(choice);
                       nextStep();
                     }}
-                    className="w-full px-4 sm:px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-white/10 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-white/70 hover:text-white/90 text-sm sm:text-base"
+                    className="w-full px-4 sm:px-6 py-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-white/70 hover:text-white/90 text-sm sm:text-base"
                   >
                     {choice}
                   </button>

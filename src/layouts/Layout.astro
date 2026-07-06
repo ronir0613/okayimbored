@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import MicroWidget from '../components/MicroWidget';
 import RecordPlayer from '../components/RecordPlayer';
+import LivingCats from '../components/LivingCats/LivingCats';
 import { ClientRouter } from 'astro:transitions';
 
 interface Props {
@@ -80,5 +81,6 @@ const {
 		</main>
 		<RecordPlayer client:load transition:persist="record-player" />
 		<MicroWidget client:idle />
+		<LivingCats client:idle />
 	</body>
 </html>

@@ -258,6 +258,7 @@ export default function RecordPlayer() {
 
   return (
     <div 
+      id="record-player-widget"
       className="fixed top-4 right-4 md:top-6 md:right-6 z-50 flex flex-col items-end pointer-events-auto"
       style={{ fontFamily: "'Space Mono', monospace" }}
     >
