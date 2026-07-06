@@ -4,6 +4,7 @@
 @theme {
   --font-sans: "Inter", "Geist", system-ui, sans-serif;
   --animate-breath: breath 6s ease-in-out infinite;
+  --animate-bg-breath: bg-breath 60s ease-in-out infinite alternate;
 }
 
 @keyframes breath {
@@ -11,8 +12,29 @@
   50% { opacity: 0.9; }
 }
 
+@keyframes bg-breath {
+  0% { background-color: #000000; }
+  50% { background-color: #010101; }
+  100% { background-color: #020202; }
+}
+
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-1%, -1%); }
+  20% { transform: translate(1%, 1%); }
+  30% { transform: translate(-2%, -1%); }
+  40% { transform: translate(1%, -1%); }
+  50% { transform: translate(-1%, 2%); }
+  60% { transform: translate(2%, 1%); }
+  70% { transform: translate(1%, -2%); }
+  80% { transform: translate(-1%, -1%); }
+  90% { transform: translate(1%, 1%); }
+}
+
 body {
-  @apply bg-[#0a0a0a] text-white/90 antialiased selection:bg-white/20 selection:text-white;
+  @apply bg-[#000000] text-white/90 antialiased selection:bg-white/20 selection:text-white;
+  animation: bg-breath 60s ease-in-out infinite alternate;
+  transition: filter 5s ease-in-out, opacity 0.05s linear;
 }
 
 /* Base custom styles to maintain a premium feel */

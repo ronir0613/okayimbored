@@ -22,7 +22,16 @@ export default function LivingCats() {
   const startTime = useRef(Date.now());
 
   // Keep ref in sync
-  useEffect(() => { catsRef.current = cats; }, [cats]);
+  useEffect(() => { 
+    catsRef.current = cats; 
+    
+    // Dispatch state for atmosphere
+    const sleeping = Object.values(cats).some((c: any) => c.state?.includes('sleep'));
+    const angry = Object.values(cats).some((c: any) => c.state === 'angry');
+    window.dispatchEvent(new CustomEvent('cat:state_change', {
+      detail: { sleeping, angry }
+    }));
+  }, [cats]);
 
   useEffect(() => {
     if (pathChosen.current) return;

@@ -73,9 +73,8 @@ export default function MicroWidget() {
         fontFamily: "'Space Mono', monospace",
       }}
     >
-      <div className="flex flex-col items-center justify-center animate-[breath_6s_ease-in-out_infinite] relative">
+      <div className="flex flex-col items-center justify-center relative">
         
-
         {/* 4 Time Boxes */}
         <div className="flex gap-1 mb-1.5 z-10 relative" style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}>
           {displayState.chars.map((char, index) => (
