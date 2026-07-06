@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect } from 'react';
+import { motion, useAnimation } from 'framer-motion';
 import { PixelCat, type CatState } from './PixelCat';
 
 export const CAT_SIZE = 48;
@@ -13,11 +13,31 @@ export interface LivingCatProps {
   duration?: number;
   text?: string;
   label?: string;
+  isPaused?: boolean;
 }
 
 export const LivingCat: React.FC<LivingCatProps> = ({ 
-  id, state, x, y, opacity = 1, duration = 0, text, label 
+  id, state, x, y, opacity = 1, duration = 0, text, label, isPaused = false
 }) => {
+  const controls = useAnimation();
+
+  useEffect(() => {
+    if (isPaused) {
+      controls.stop();
+    } else {
+      controls.start({
+        x,
+        y,
+        opacity,
+        transition: {
+          x: { duration, ease: 'linear' },
+          y: { duration, ease: 'linear' },
+          opacity: { duration: 1, ease: 'easeInOut' }
+        }
+      });
+    }
+  }, [x, y, opacity, duration, isPaused, controls]);
+
   return (
     <motion.div
       key={id}
@@ -29,16 +49,16 @@ export const LivingCat: React.FC<LivingCatProps> = ({
         height: CAT_SIZE,
         pointerEvents: 'none',
         zIndex: 9998,
+        // Pause the CSS animation inside PixelCat when global paused
+        ['--play-state' as any]: isPaused ? 'paused' : 'running'
       }}
-      initial={false}
-      animate={{ x, y, opacity }}
-      transition={{
-        x: { duration, ease: 'linear' },
-        y: { duration, ease: 'linear' },
-        opacity: { duration: 1, ease: 'easeInOut' } // Fixed opacity duration so it fades in/out nicely
-      }}
+      initial={{ x, y, opacity }}
+      animate={controls}
     >
-      <div className="w-full h-full relative flex items-center justify-center">
+      <div 
+        className="w-full h-full relative flex items-center justify-center"
+        style={{ animationPlayState: 'var(--play-state)' }}
+      >
         {text && (
           <div className="absolute bottom-[90%] left-1/2 -translate-x-1/2 w-max max-w-[200px] bg-black/80 backdrop-blur-sm border border-white/10 text-white/80 text-[11px] px-3 py-2 rounded-lg text-center whitespace-pre-wrap shadow-xl font-mono leading-relaxed pointer-events-none">
             {text}
@@ -49,7 +69,9 @@ export const LivingCat: React.FC<LivingCatProps> = ({
             {label}
           </div>
         )}
-        <PixelCat state={state} />
+        <div style={{ animationPlayState: 'var(--play-state)' }} className="w-full h-full [&_*]:!animate-[inherit_!important]">
+          <PixelCat state={state} />
+        </div>
       </div>
     </motion.div>
   );

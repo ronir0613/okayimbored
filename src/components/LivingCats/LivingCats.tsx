@@ -17,9 +17,24 @@ function pickWeighted<T>(items: { item: T; weight: number }[]): T {
 
 export default function LivingCats() {
   const [cats, setCats] = useState<Record<string, any>>({});
+  const [isPaused, setIsPaused] = useState(false);
   const catsRef = useRef<Record<string, any>>({});
   const pathChosen = useRef(false);
   const startTime = useRef(Date.now());
+
+  // Listen to global pause events
+  useEffect(() => {
+    const handlePause = () => setIsPaused(true);
+    const handleResume = () => setIsPaused(false);
+    
+    window.addEventListener('cat:pause', handlePause);
+    window.addEventListener('cat:resume', handleResume);
+    
+    return () => {
+      window.removeEventListener('cat:pause', handlePause);
+      window.removeEventListener('cat:resume', handleResume);
+    };
+  }, []);
 
   // Keep ref in sync
   useEffect(() => { 
@@ -100,6 +115,7 @@ export default function LivingCats() {
           duration={cat.duration}
           text={cat.text}
           label={cat.label}
+          isPaused={isPaused}
         />
       ))}
     </div>

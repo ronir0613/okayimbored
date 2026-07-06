@@ -4,6 +4,7 @@ import MicroWidget from '../components/MicroWidget';
 import RecordPlayer from '../components/RecordPlayer';
 import LivingCats from '../components/LivingCats/LivingCats';
 import Atmosphere from '../components/Atmosphere';
+import CuriosityEvent from '../components/CuriosityEvent';
 import { ClientRouter } from 'astro:transitions';
 
 interface Props {
@@ -84,5 +85,6 @@ const {
 		<MicroWidget client:idle />
 		<LivingCats client:idle />
 		<Atmosphere client:load transition:persist="atmosphere" />
+		<CuriosityEvent client:load transition:persist="curiosity" />
 	</body>
 </html>
