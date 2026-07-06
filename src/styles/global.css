@@ -76,3 +76,9 @@ html, body {
 .crt-flicker {
   animation: crt-flicker 4s infinite linear;
 }
+
+/* False Ending state: slow down animations */
+body.false-ending-active * {
+  animation-duration: 4s !important; /* slow things down */
+  transition-duration: 2s !important;
+}

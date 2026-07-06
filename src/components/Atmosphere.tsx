@@ -7,6 +7,7 @@ export default function Atmosphere() {
   // Time & Cat states
   const [timeFilter, setTimeFilter] = useState('');
   const [catTemperature, setCatTemperature] = useState('');
+  const [falseEndingFilter, setFalseEndingFilter] = useState('');
 
   // 1. Cursor Light
   useEffect(() => {
@@ -70,11 +71,22 @@ export default function Atmosphere() {
     return () => window.removeEventListener('cat:state_change', handleCatState);
   }, []);
 
+  // 3.5 False Ending Atmosphere
+  useEffect(() => {
+    const handleFalseEnding = () => {
+      setFalseEndingFilter('brightness(0.6) contrast(1.1)');
+      document.body.classList.add('false-ending-active');
+      window.dispatchEvent(new CustomEvent('cat:pause'));
+    };
+    window.addEventListener('cat:false_ending', handleFalseEnding);
+    return () => window.removeEventListener('cat:false_ending', handleFalseEnding);
+  }, []);
+
   // Apply filters to body
   useEffect(() => {
-    const filters = [timeFilter, catTemperature].filter(Boolean).join(' ');
+    const filters = [timeFilter, catTemperature, falseEndingFilter].filter(Boolean).join(' ');
     document.body.style.filter = filters;
-  }, [timeFilter, catTemperature]);
+  }, [timeFilter, catTemperature, falseEndingFilter]);
 
   // 4. Website Blinks
   useEffect(() => {

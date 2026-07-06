@@ -4,6 +4,7 @@ import { ScreenTransition } from './ScreenTransition';
 import { TarotCards } from './TarotCards';
 import { ArchaeologyEvent } from './ArchaeologyEvent';
 import { getRandomArtifact, type Artifact } from '../lib/archaeology';
+import { PixelCat } from './LivingCats/PixelCat';
 export function Experience() {
   const [step, setStep] = useState(1);
   const [desiredContent, setDesiredContent] = useState<string>('');
@@ -24,6 +25,12 @@ export function Experience() {
   // V4 specific state
   const [sessionId, setSessionId] = useState<string | undefined>();
   const [stats, setStats] = useState({ boredPercentage: 84, activeVisitors: 1 });
+
+  // False ending state
+  const [falseEndingActive, setFalseEndingActive] = useState(false);
+  const [falseEndingPhase, setFalseEndingPhase] = useState(0);
+  const [falseEndingType, setFalseEndingType] = useState<number | null>(null);
+  const [falseEndingChoice, setFalseEndingChoice] = useState<string | null>(null);
   // 1. Initial rare event check
   useEffect(() => {
     const now = new Date();
@@ -106,12 +113,59 @@ export function Experience() {
     }
   }, [step, lastInteraction, isRareEventActive, hasSeenRareEvent]);
 
-  // Final screen event
+  // Final screen event & False Ending logic
   useEffect(() => {
     if (step === 8) {
       window.dispatchEvent(new CustomEvent('cat:final_screen'));
+      
+      const isRare = Math.random() < 0.0001;
+      const delay = isRare ? 30000 : 3000 + Math.random() * 7000;
+      
+      const timer = setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('cat:false_ending'));
+        setFalseEndingActive(true);
+        if (isRare) {
+          setFalseEndingType(11);
+          setFalseEndingPhase(1);
+        } else {
+          setFalseEndingType(Math.floor(Math.random() * 10) + 1);
+          setFalseEndingPhase(1);
+          const thoughts = ["you probably didn't need another video.", "you stayed longer than we expected.", "thanks."];
+          setFalseEndingChoice(thoughts[Math.floor(Math.random() * thoughts.length)]);
+        }
+      }, delay);
+      
+      return () => clearTimeout(timer);
     }
   }, [step]);
+
+  // False ending progression
+  useEffect(() => {
+    if (!falseEndingActive || !falseEndingType) return;
+    
+    const advance = (ms: number) => {
+      const t = setTimeout(() => {
+        setFalseEndingPhase(p => p + 1);
+      }, ms);
+      return () => clearTimeout(t);
+    };
+
+    if (falseEndingType === 1 && falseEndingPhase < 3) return advance(2500); // ACTUALLY
+    if (falseEndingType === 2 && falseEndingPhase < 3) return advance(2500); // THE WEBSITE REMEMBERED
+    if (falseEndingType === 3 && falseEndingPhase < 2) return advance(3000); // THE CAT OBJECTED
+    if (falseEndingType === 4 && falseEndingPhase < 3) return advance(2500); // THE WEBSITE HAS A QUESTION
+    if (falseEndingType === 5 && falseEndingPhase < 2) return advance(3000); // THE WEBSITE GOT LONELY
+    if (falseEndingType === 6 && falseEndingPhase < 2) return advance(3000); // THE RECORD PLAYER
+    if (falseEndingType === 7 && falseEndingPhase < 3) return advance(2500); // THE LAST THOUGHT
+    if (falseEndingType === 8) {
+      if (falseEndingPhase === 1) return advance(2000); // show buttons
+      if (falseEndingPhase === 3) return advance(2500); // after interesting
+    }
+    if (falseEndingType === 9 && falseEndingPhase < 3) return advance(2500); // THE WEBSITE APOLOGIZES
+    if (falseEndingType === 10 && falseEndingPhase < 3) return advance(2500); // THE REAL ENDING
+    if (falseEndingType === 11 && falseEndingPhase < 2) return advance(4000); // Rare
+
+  }, [falseEndingActive, falseEndingType, falseEndingPhase]);
 
   const handleInteraction = (stepName?: string, value?: string) => {
     setLastInteraction(Date.now());
@@ -227,6 +281,79 @@ export function Experience() {
         return null;
     }
   };
+
+  if (falseEndingActive && falseEndingType) {
+    let content = [];
+    const motionProps = {
+      initial: { opacity: 0, y: 10 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 1.5, ease: "easeOut" }
+    };
+    
+    if (falseEndingType === 1) {
+      if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>actually.</motion.p>);
+      if (falseEndingPhase >= 2) content.push(<motion.p key="2" {...motionProps}>one more thing.</motion.p>);
+    } else if (falseEndingType === 2) {
+      if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>wait.</motion.p>);
+      if (falseEndingPhase >= 2) content.push(<motion.p key="2" {...motionProps}>we forgot something.</motion.p>);
+    } else if (falseEndingType === 3) {
+      if (falseEndingPhase >= 1) {
+        content.push(<motion.p key="1" {...motionProps}>the cat disagrees.</motion.p>);
+        content.push(
+          <motion.div key="cat" {...motionProps} transition={{ duration: 2, delay: 0.5 }} className="mt-12 flex justify-center w-full">
+            <div className="w-16 h-16 opacity-70 transform -scale-x-100">
+              <PixelCat state="idle" duration={0} />
+            </div>
+          </motion.div>
+        );
+      }
+    } else if (falseEndingType === 4) {
+      if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>before you go.</motion.p>);
+      if (falseEndingPhase >= 2) content.push(<motion.p key="2" {...motionProps}>can we ask something?</motion.p>);
+    } else if (falseEndingType === 5) {
+      if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>it's quiet tonight.</motion.p>);
+    } else if (falseEndingType === 6) {
+      if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>the record is still playing.</motion.p>);
+    } else if (falseEndingType === 7) {
+      if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>one last thought.</motion.p>);
+      if (falseEndingPhase >= 2) content.push(<motion.p key="2" {...motionProps}>{falseEndingChoice || "thanks."}</motion.p>);
+    } else if (falseEndingType === 8) {
+      if (falseEndingPhase >= 1 && falseEndingPhase < 3) content.push(<motion.p key="1" {...motionProps}>are you still here?</motion.p>);
+      if (falseEndingPhase === 2) {
+        content.push(
+          <motion.div key="btns" {...motionProps} className="flex flex-col gap-3 mt-8 items-center">
+            {['yes', 'unfortunately', 'apparently'].map(b => (
+              <button key={b} onClick={() => setFalseEndingPhase(3)} className="px-6 py-3 rounded-full hover:bg-white/5 transition-all text-white/50 hover:text-white text-sm sm:text-base tracking-wide">
+                {b}
+              </button>
+            ))}
+          </motion.div>
+        );
+      }
+      if (falseEndingPhase >= 3) {
+        content.push(<motion.p key="3" {...motionProps}>interesting.</motion.p>);
+      }
+    } else if (falseEndingType === 9) {
+      if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>sorry.</motion.p>);
+      if (falseEndingPhase >= 2) content.push(<motion.p key="2" {...motionProps}>we're not very good at endings.</motion.p>);
+    } else if (falseEndingType === 10) {
+      if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>okay.</motion.p>);
+      if (falseEndingPhase >= 2) content.push(<motion.p key="2" {...motionProps}>this one is real.</motion.p>);
+    } else if (falseEndingType === 11) {
+      if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>thank you for waiting.</motion.p>);
+    }
+
+    return (
+      <div 
+        className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px]"
+        onClick={() => handleInteraction()}
+      >
+        <div className="space-y-8 sm:space-y-12 text-center text-xl sm:text-2xl md:text-3xl text-white/90 font-medium tracking-tight px-4 w-full">
+          {content}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
