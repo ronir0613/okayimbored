@@ -21,6 +21,26 @@ export default function LivingCats() {
   const catsRef = useRef<Record<string, any>>({});
   const pathChosen = useRef(false);
   const startTime = useRef(Date.now());
+  const [currentPath, setCurrentPath] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname;
+    }
+    return '';
+  });
+
+  // Listen to path changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handlePageLoad = () => {
+      setCurrentPath(window.location.pathname);
+    };
+
+    window.addEventListener('astro:page-load', handlePageLoad);
+    return () => {
+      window.removeEventListener('astro:page-load', handlePageLoad);
+    };
+  }, []);
 
   // Listen to global pause events
   useEffect(() => {
@@ -50,21 +70,29 @@ export default function LivingCats() {
 
   useEffect(() => {
     if (pathChosen.current) return;
+    if (typeof window !== 'undefined' && window.location.pathname.includes('/tonight')) {
+      return;
+    }
     pathChosen.current = true;
+    
+    let active = true;
     
     const controls = {
       spawn: (initial: any) => {
+        if (!active) return '';
         const id = crypto.randomUUID();
         setCats(prev => ({ ...prev, [id]: { id, x: -CAT_SIZE, y: -CAT_SIZE, opacity: 1, duration: 0, state: 'idle', ...initial } }));
         return id;
       },
       update: (id: string, updates: any) => {
+        if (!active) return;
         setCats(prev => {
           if (!prev[id]) return prev;
           return { ...prev, [id]: { ...prev[id], ...updates } };
         });
       },
       remove: (id: string) => {
+        if (!active) return;
         setCats(prev => {
           const next = { ...prev };
           delete next[id];
@@ -81,6 +109,10 @@ export default function LivingCats() {
       },
       waitForEvent: (eventName: string, timeoutMs: number = 0) => {
         return new Promise<boolean>((resolve) => {
+          if (!active) {
+            resolve(false);
+            return;
+          }
           let timeout: any;
           const handler = () => {
             if (timeout) clearTimeout(timeout);
@@ -100,7 +132,14 @@ export default function LivingCats() {
 
     runOrchestrator(controls, startTime.current);
 
+    return () => {
+      active = false;
+    };
   }, []);
+
+  if (currentPath.includes('/tonight')) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 9999 }}>

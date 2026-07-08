@@ -69,7 +69,7 @@ export const LivingCat: React.FC<LivingCatProps> = ({
             {label}
           </div>
         )}
-        <div style={{ animationPlayState: 'var(--play-state)' }} className="w-full h-full [&_*]:!animate-[inherit_!important]">
+        <div style={{ animationPlayState: 'var(--play-state)' }} className="w-full h-full [&_*]:!animate-[inherit]">
           <PixelCat state={state} />
         </div>
       </div>

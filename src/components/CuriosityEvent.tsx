@@ -20,6 +20,10 @@ export default function CuriosityEvent() {
       // Don't trigger if already active
       if (status !== 'idle' || hasTriggeredRef.current) return;
       
+      // Check if we are on the tonight page
+      const isTonightPage = typeof window !== 'undefined' && window.location.pathname.includes('/tonight');
+      if (isTonightPage) return;
+      
       // Don't intercept clicks inside the curiosity event itself
       const target = e.target as HTMLElement;
       if (target.closest('#curiosity-container')) return;
@@ -39,6 +43,9 @@ export default function CuriosityEvent() {
     const idleCheck = setInterval(() => {
       if (status !== 'idle' || hasTriggeredRef.current) return;
       
+      const isTonightPage = typeof window !== 'undefined' && window.location.pathname.includes('/tonight');
+      if (isTonightPage) return;
+
       if (Math.random() < IDLE_PROBABILITY) {
         triggerCuriosity();
       }
@@ -51,6 +58,16 @@ export default function CuriosityEvent() {
   }, [status]);
 
   const triggerCuriosity = () => {
+    if (typeof document !== 'undefined') {
+      if (
+        document.body.classList.contains('rare-event-active') ||
+        document.body.classList.contains('archaeology-active') ||
+        document.body.classList.contains('false-ending-active')
+      ) {
+        return;
+      }
+    }
+
     hasTriggeredRef.current = true;
     
     // Pause cats
@@ -88,6 +105,19 @@ export default function CuriosityEvent() {
       }, 2500);
     }
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handlePageLoad = () => {
+      if (window.location.pathname.includes('/tonight') && status !== 'idle') {
+        setStatus('idle');
+      }
+    };
+    window.addEventListener('astro:page-load', handlePageLoad);
+    return () => {
+      window.removeEventListener('astro:page-load', handlePageLoad);
+    };
+  }, [status]);
 
   if (status === 'idle') return null;
 

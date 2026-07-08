@@ -74,7 +74,7 @@ export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="text-center mb-12"
+            className="text-center mb-6 sm:mb-12"
           >
             <p className="text-xl sm:text-2xl text-white/90">pick a card.</p>
             <p className="text-lg sm:text-xl text-white/50 pt-2">go with whatever feels right.</p>
@@ -84,12 +84,12 @@ export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, 
             key="post-pick"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center mb-12 h-[64px] sm:h-[72px]" // Keeps spacing consistent
+            className="text-center mb-6 sm:mb-12 h-[48px] sm:h-[72px]" // Keeps spacing consistent
           />
         )}
       </AnimatePresence>
 
-      <div className="flex gap-4 sm:gap-8 justify-center items-center w-full max-w-2xl mx-auto" style={{ perspective: '1000px' }}>
+      <div className="flex gap-2 min-[360px]:gap-4 sm:gap-8 justify-center items-center w-full max-w-2xl mx-auto" style={{ perspective: '1000px' }}>
         {cards.map((card, idx) => {
           const isSelected = selectedCardIdx === idx;
           const isOther = selectedCardIdx !== null && !isSelected;
@@ -97,7 +97,7 @@ export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, 
           return (
             <motion.div
               key={idx}
-              className={`relative cursor-pointer w-24 h-36 sm:w-32 sm:h-48 md:w-40 md:h-56 ${
+              className={`relative cursor-pointer w-[76px] h-[114px] min-[360px]:w-[84px] min-[360px]:h-[126px] min-[400px]:w-24 min-[400px]:h-36 sm:w-32 sm:h-48 md:w-40 md:h-56 ${
                 selectedCardIdx === null ? 'hover:scale-105' : ''
               }`}
               initial={{ opacity: 0, y: 20 }}
@@ -143,16 +143,16 @@ export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, 
 
                 {/* Back of card (Card front visually) */}
                 <div 
-                  className="absolute inset-0 w-full h-full rounded-xl bg-white/[0.05] border border-white/20 p-3 sm:p-4 flex flex-col items-center justify-center text-center shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+                  className="absolute inset-0 w-full h-full rounded-xl bg-white/[0.05] border border-white/20 p-1.5 min-[360px]:p-2.5 sm:p-4 flex flex-col items-center justify-center text-center shadow-[0_0_30px_rgba(255,255,255,0.1)]"
                   style={{ 
                     backfaceVisibility: 'hidden',
                     transform: 'rotateY(180deg)'
                   }}
                 >
-                  <h3 className="text-[10px] sm:text-xs md:text-sm tracking-[0.2em] text-white/90 mb-3 sm:mb-4 font-medium">
+                  <h3 className="text-[8px] min-[360px]:text-[10px] sm:text-xs md:text-sm tracking-[0.15em] sm:tracking-[0.2em] text-white/90 mb-1.5 sm:mb-4 font-medium">
                     {card.title}
                   </h3>
-                  <p className="text-[9px] sm:text-[10px] md:text-xs text-white/60 whitespace-pre-line leading-relaxed">
+                  <p className="text-[7px] min-[360px]:text-[9px] sm:text-[10px] md:text-xs text-white/60 whitespace-pre-line leading-normal sm:leading-relaxed">
                     {renderDescription(card.description, isSelected ? cardStats : null)}
                   </p>
                 </div>
@@ -169,7 +169,7 @@ export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="mt-16 sm:mt-24"
+            className="mt-8 sm:mt-24"
           >
             <p className="text-xs sm:text-sm text-white/30 uppercase tracking-widest">
               there is no wrong choice.
@@ -181,7 +181,7 @@ export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 2, duration: 1 }} // Wait a bit for them to read
-            className="mt-16 sm:mt-24"
+            className="mt-8 sm:mt-24"
           >
             <button 
               onClick={onComplete}

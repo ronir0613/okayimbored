@@ -167,6 +167,26 @@ export function Experience() {
 
   }, [falseEndingActive, falseEndingType, falseEndingPhase]);
 
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      if (isRareEventActive) {
+        document.body.classList.add('rare-event-active');
+      } else {
+        document.body.classList.remove('rare-event-active');
+      }
+    }
+  }, [isRareEventActive]);
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      if (isArchaeologyActive) {
+        document.body.classList.add('archaeology-active');
+      } else {
+        document.body.classList.remove('archaeology-active');
+      }
+    }
+  }, [isArchaeologyActive]);
+
   const handleInteraction = (stepName?: string, value?: string) => {
     setLastInteraction(Date.now());
     if (sessionId && stepName && value) {
@@ -204,9 +224,9 @@ export function Experience() {
 
   if (isRareEventActive && rareEventContent) {
     return (
-      <div className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px]" onClick={() => handleInteraction()}>
+      <div className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px] px-4" onClick={() => handleInteraction()}>
         <AnimatePresence mode="wait">
-          <ScreenTransition keyId="rare-event">
+          <ScreenTransition key="rare-event" keyId="rare-event">
             <div className="space-y-6 sm:space-y-8 px-4 sm:px-0">
               <p className="text-xl sm:text-2xl md:text-3xl text-white/90 font-medium">
                 {rareEventContent.title}
@@ -343,6 +363,11 @@ export function Experience() {
       if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>thank you for waiting.</motion.p>);
     }
 
+    const showLogbookLink = 
+      (falseEndingType === 8 && falseEndingPhase >= 3) ||
+      ([3, 5, 6, 11].includes(falseEndingType) && falseEndingPhase >= 1) ||
+      ([1, 2, 4, 7, 9, 10].includes(falseEndingType) && falseEndingPhase >= 2);
+
     return (
       <div 
         className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px]"
@@ -350,6 +375,22 @@ export function Experience() {
       >
         <div className="space-y-8 sm:space-y-12 text-center text-xl sm:text-2xl md:text-3xl text-white/90 font-medium tracking-tight px-4 w-full">
           {content}
+          
+          {showLogbookLink && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 2, delay: 1.5 }}
+              className="pt-4"
+            >
+              <a 
+                href="/tonight" 
+                className="inline-block text-xs text-white/30 hover:text-white/70 border border-white/10 hover:border-white/30 rounded-full px-4 py-2 tracking-wider font-mono uppercase transition-colors duration-300"
+              >
+                Read tonight's logbook
+              </a>
+            </motion.div>
+          )}
         </div>
       </div>
     );
@@ -357,14 +398,14 @@ export function Experience() {
 
   return (
     <div 
-      className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px]"
+      className="w-full h-full max-w-lg mx-auto relative flex items-center justify-center min-h-[400px] px-4"
       onClick={() => handleInteraction()}
     >
       <AnimatePresence mode="wait">
         
         {/* SCREEN 1 */}
         {step === 1 && (
-          <ScreenTransition keyId="s1">
+          <ScreenTransition key="s1" keyId="s1">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight mb-8 sm:mb-12 text-white/90">
               Are you bored?
             </h1>
@@ -393,7 +434,7 @@ export function Experience() {
 
         {/* SCREEN 2 */}
         {step === 2 && (
-          <ScreenTransition keyId="s2">
+          <ScreenTransition key="s2" keyId="s2">
             <div id="statistics-content" className="space-y-6 sm:space-y-8 px-4 sm:px-0">
               <p className="text-lg sm:text-xl md:text-2xl text-white/80 font-medium italic">
                 {stats.boredPercentage}% of visitors tonight said they were bored.
@@ -416,7 +457,7 @@ export function Experience() {
 
         {/* SCREEN 3 */}
         {step === 3 && (
-          <ScreenTransition keyId="s3">
+          <ScreenTransition key="s3" keyId="s3">
             <div className="space-y-6 sm:space-y-8 px-4 sm:px-0">
               <p className="text-lg sm:text-xl md:text-2xl text-white/80 font-medium">
                 Cats ignore approximately 93% of human requests.
@@ -436,7 +477,7 @@ export function Experience() {
 
         {/* SCREEN 4: The Interview */}
         {step === 4 && (
-          <ScreenTransition keyId={`s4-q${qStep}`}>
+          <ScreenTransition key={`s4-q${qStep}`} keyId={`s4-q${qStep}`}>
             <div className="space-y-6 sm:space-y-8 px-4 sm:px-0 w-full">
               {qStep === 0 && (
                 <>
@@ -501,7 +542,7 @@ export function Experience() {
 
         {/* SCREEN 5 */}
         {step === 5 && (
-          <ScreenTransition keyId="s5">
+          <ScreenTransition key="s5" keyId="s5">
             <div className="space-y-6 px-4 sm:px-0">
               <p className="text-xl sm:text-2xl text-white/90 italic">
                 The cat believes this interview has become too personal.
@@ -521,14 +562,14 @@ export function Experience() {
 
         {/* SCREEN 6: Tarot Cards */}
         {step === 6 && (
-          <ScreenTransition keyId="s6-cards">
+          <ScreenTransition key="s6-cards" keyId="s6-cards">
             <TarotCards onComplete={nextStep} sessionId={sessionId} />
           </ScreenTransition>
         )}
 
         {/* SCREEN 7 */}
         {step === 7 && (
-          <ScreenTransition keyId="s7">
+          <ScreenTransition key="s7" keyId="s7">
             <div className="space-y-6 sm:space-y-8 px-4 sm:px-0 w-full">
               <p className="text-sm sm:text-base text-white/50 italic mb-2">The card chose you. Now you choose.</p>
               <p className="text-2xl sm:text-3xl text-white/90">What do you want to hear?</p>
@@ -559,7 +600,7 @@ export function Experience() {
 
         {/* SCREEN 8 & OUTRO */}
         {step === 8 && (
-          <ScreenTransition keyId="s8">
+          <ScreenTransition key="s8" keyId="s8">
             <div className="space-y-8 sm:space-y-12 px-4 sm:px-0 w-full">
               <div className="space-y-3 sm:space-y-4">
                 {renderPathContent()}
@@ -577,10 +618,20 @@ export function Experience() {
                 </ul>
               </div>
 
-              <div className="pt-8 sm:pt-12 pb-8">
+              <div className="pt-8 sm:pt-12 pb-8 flex flex-col items-center gap-4 text-center">
                 <p className="text-white/30 text-xs sm:text-sm italic">
                   Thanks for spending a minute here.
                 </p>
+                <motion.a 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.3 }}
+                  whileHover={{ opacity: 0.8, borderColor: 'rgba(255,255,255,0.3)' }}
+                  transition={{ duration: 2, delay: 1 }}
+                  href="/tonight" 
+                  className="mt-2 text-xs text-white border border-white/10 rounded-full px-4 py-2 tracking-wider font-mono uppercase"
+                >
+                  Read tonight's logbook
+                </motion.a>
               </div>
             </div>
           </ScreenTransition>

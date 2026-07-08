@@ -16,6 +16,27 @@ export default function RecordPlayer() {
   const [playerState, setPlayerState] = useState<PlayerState>('IDLE');
   const [stationIndex, setStationIndex] = useState(0);
   
+  const [isTonight, setIsTonight] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname.includes('/tonight');
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const checkPath = () => {
+      setIsTonight(window.location.pathname.includes('/tonight'));
+    };
+
+    checkPath();
+    window.addEventListener('astro:page-load', checkPath);
+    return () => {
+      window.removeEventListener('astro:page-load', checkPath);
+    };
+  }, []);
+  
   // Event states
   const [eventText, setEventText] = useState('');
   const [eventStep, setEventStep] = useState(0);
@@ -59,6 +80,24 @@ export default function RecordPlayer() {
     } else if (playerState === 'IDLE') {
       localStorage.setItem('okayimbored_playing', 'false');
     }
+  }, [playerState]);
+
+  // Reset cat event if navigating to tonight page
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handlePageLoad = () => {
+      const isTonightPage = window.location.pathname.includes('/tonight');
+      if (isTonightPage && playerState === 'EVENT_CAT') {
+        setPlayerState('IDLE');
+        setEventText('');
+      }
+    };
+    
+    window.addEventListener('astro:page-load', handlePageLoad);
+    return () => {
+      window.removeEventListener('astro:page-load', handlePageLoad);
+    };
   }, [playerState]);
 
   // Audio Fade Utility
@@ -125,12 +164,14 @@ export default function RecordPlayer() {
     
     if (playerState !== 'IDLE') return;
 
+    const isTonightPage = typeof window !== 'undefined' && window.location.pathname.includes('/tonight');
+
     // Probability Engine
     const rand = Math.random();
     if (rand < 0.001) {
       // 0.1% Raccoon
       startRaccoonEvent();
-    } else if (rand < 0.004) {
+    } else if (rand < 0.004 && !isTonightPage) {
       // 0.3% Cat
       startCatEvent();
     } else if (rand < 0.009) {
@@ -259,7 +300,7 @@ export default function RecordPlayer() {
   return (
     <div 
       id="record-player-widget"
-      className="fixed top-4 right-4 md:top-6 md:right-6 z-50 flex flex-col items-end pointer-events-auto"
+      className={`${isTonight ? 'absolute' : 'fixed'} top-4 right-4 md:top-6 md:right-6 z-50 flex flex-col items-end pointer-events-auto`}
       style={{ fontFamily: "'Space Mono', monospace" }}
     >
       <audio 
@@ -286,12 +327,12 @@ export default function RecordPlayer() {
               <motion.div 
                 key="playing"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex flex-col items-end group cursor-pointer"
+                className="flex flex-col items-end group cursor-pointer max-w-[120px] sm:max-w-[200px] md:max-w-none"
                 onClick={changeStation}
                 title="Click to change station"
               >
                 <span className="text-[10px] text-white/40 mb-0.5">now playing:</span>
-                <span className="text-xs text-[#a5b4fc]/80 transition-colors group-hover:text-[#a5b4fc] group-hover:drop-shadow-[0_0_4px_rgba(165,180,252,0.5)]">
+                <span className="text-xs text-[#a5b4fc]/80 transition-colors group-hover:text-[#a5b4fc] group-hover:drop-shadow-[0_0_4px_rgba(165,180,252,0.5)] truncate w-full text-right">
                   {STATIONS[stationIndex].name}
                 </span>
               </motion.div>
@@ -341,7 +382,7 @@ export default function RecordPlayer() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="absolute top-12 right-0 bg-black/80 backdrop-blur-md border border-white/10 rounded-md p-4 min-w-[240px] shadow-2xl text-xs text-white/80 whitespace-pre-line text-right flex flex-col items-end"
+            className="absolute top-12 right-0 bg-black/80 backdrop-blur-md border border-white/10 rounded-md p-4 min-w-[240px] max-w-[calc(100vw-32px)] shadow-2xl text-xs text-white/80 whitespace-pre-line text-right flex flex-col items-end"
           >
             <motion.div 
               key={eventText}

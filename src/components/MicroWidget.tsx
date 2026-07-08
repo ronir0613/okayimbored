@@ -16,6 +16,7 @@ export default function MicroWidget() {
     bottom: string;
   } | null>(null);
 
+
   useEffect(() => {
     // Delay mounting slightly to simulate an old tube warming up
     const mountTimer = setTimeout(() => setMounted(true), 1500);
@@ -76,7 +77,7 @@ export default function MicroWidget() {
       <div className="flex flex-col items-center justify-center relative">
         
         {/* 4 Time Boxes */}
-        <div className="flex gap-1 mb-1.5 z-10 relative" style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}>
+        <div className="flex flex-row flex-nowrap gap-1 mb-1.5 z-10 relative" style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}>
           {displayState.chars.map((char, index) => (
              <FlipBox key={index} char={char} />
           ))}
