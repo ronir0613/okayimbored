@@ -370,11 +370,11 @@ export function Experience() {
   };
 
   if (falseEndingActive && falseEndingType) {
-    let content = [];
+    let content: any[] = [];
     const motionProps = {
       initial: { opacity: 0, y: 10 },
       animate: { opacity: 1, y: 0 },
-      transition: { duration: 1.5, ease: "easeOut" }
+      transition: { duration: 1.5, ease: "easeOut" as const }
     };
     
     if (falseEndingType === 1) {
@@ -389,7 +389,7 @@ export function Experience() {
         content.push(
           <motion.div key="cat" {...motionProps} transition={{ duration: 2, delay: 0.5 }} className="mt-12 flex justify-center w-full">
             <div className="w-16 h-16 opacity-70 transform -scale-x-100">
-              <PixelCat state="idle" duration={0} />
+              <PixelCat state="idle" />
             </div>
           </motion.div>
         );
