@@ -1,0 +1,64 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="The Waiting Room" noindex={true}>
+  <div class="flex flex-col items-center justify-center min-h-[400px] select-none text-center relative w-full px-4">
+    
+    {/* Minimal Chair SVG */}
+    <div class="mb-12">
+      <svg class="w-10 h-10 text-white/35" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        {/* Back rest */}
+        <path d="M8 3v10" stroke-linecap="round"></path>
+        {/* Seat */}
+        <path d="M8 13h8" stroke-linecap="round"></path>
+        {/* Legs */}
+        <path d="M8 13v8" stroke-linecap="round"></path>
+        <path d="M16 13v8" stroke-linecap="round"></path>
+      </svg>
+    </div>
+
+    {/* Content that fades in after 10s */}
+    <div id="wait-content" class="space-y-8 opacity-0 transition-opacity duration-[3000ms] ease-in-out flex flex-col items-center">
+      <p class="text-sm font-mono text-white/40 tracking-wider">
+        thank you for waiting.
+      </p>
+
+      <button 
+        id="wait-continue-btn"
+        class="text-xs font-mono text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest cursor-pointer"
+      >
+        continue.
+      </button>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { navigate } from 'astro:transitions/client';
+
+  const initWaitingRoom = () => {
+    const content = document.getElementById('wait-content');
+    const btn = document.getElementById('wait-continue-btn');
+    if (!content || !btn) return;
+
+    // Reset initial state
+    content.classList.add('opacity-0');
+    content.classList.add('pointer-events-none');
+
+    // Fade in after 10 seconds
+    const timer = setTimeout(() => {
+      content.classList.remove('opacity-0');
+      content.classList.remove('pointer-events-none');
+    }, 10000);
+
+    btn.addEventListener('click', () => {
+      clearTimeout(timer);
+      sessionStorage.setItem('okayimbored_returning_from_secret', 'true');
+      navigate('/');
+    });
+  };
+
+  initWaitingRoom();
+  document.addEventListener('astro:page-load', initWaitingRoom);
+</script>

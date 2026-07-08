@@ -68,10 +68,16 @@ export default function LivingCats() {
     }));
   }, [cats]);
 
+
+
   useEffect(() => {
     if (pathChosen.current) return;
-    if (typeof window !== 'undefined' && window.location.pathname.includes('/tonight')) {
-      return;
+    if (typeof window !== 'undefined') {
+      const isTonightPage = window.location.pathname.includes('/tonight');
+      const isSecretPage = ['/quiet', '/window', '/attic', '/after-hours', '/basement', '/rooftop', '/wait', '/cats', '/radio'].some(p => window.location.pathname.startsWith(p)) || document.title.toLowerCase().includes('404');
+      if (isTonightPage || isSecretPage) {
+        return;
+      }
     }
     pathChosen.current = true;
     

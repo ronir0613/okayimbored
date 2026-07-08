@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { PixelCat, type CatState } from './PixelCat';
+import { navigate } from 'astro:transitions/client';
 
 export const CAT_SIZE = 48;
 
@@ -16,13 +17,15 @@ export interface LivingCatProps {
   isPaused?: boolean;
 }
 
+
 export const LivingCat: React.FC<LivingCatProps> = ({ 
   id, state, x, y, opacity = 1, duration = 0, text, label, isPaused = false
 }) => {
   const controls = useAnimation();
+  const [clickedText, setClickedText] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isPaused) {
+    if (isPaused || clickedText) {
       controls.stop();
     } else {
       controls.start({
@@ -36,7 +39,24 @@ export const LivingCat: React.FC<LivingCatProps> = ({
         }
       });
     }
-  }, [x, y, opacity, duration, isPaused, controls]);
+  }, [x, y, opacity, duration, isPaused, clickedText, controls]);
+
+  const handleCatClick = () => {
+    if (clickedText) return;
+    
+    // Pause other cats
+    window.dispatchEvent(new CustomEvent('cat:pause'));
+    setClickedText("meow.");
+    
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('cat:resume'));
+      const target = Math.random() < 0.5 ? '/cats' : '/basement';
+      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true');
+      navigate(target);
+    }, 1000);
+  };
+
+  const displayText = clickedText || text;
 
   return (
     <motion.div
@@ -50,18 +70,19 @@ export const LivingCat: React.FC<LivingCatProps> = ({
         pointerEvents: 'none',
         zIndex: 9998,
         // Pause the CSS animation inside PixelCat when global paused
-        ['--play-state' as any]: isPaused ? 'paused' : 'running'
+        ['--play-state' as any]: (isPaused || clickedText) ? 'paused' : 'running'
       }}
       initial={{ x, y, opacity }}
       animate={controls}
     >
       <div 
-        className="w-full h-full relative flex items-center justify-center"
+        className="w-full h-full relative flex items-center justify-center pointer-events-auto cursor-pointer"
+        onClick={handleCatClick}
         style={{ animationPlayState: 'var(--play-state)' }}
       >
-        {text && (
+        {displayText && (
           <div className="absolute bottom-[90%] left-1/2 -translate-x-1/2 w-max max-w-[200px] bg-black/80 backdrop-blur-sm border border-white/10 text-white/80 text-[11px] px-3 py-2 rounded-lg text-center whitespace-pre-wrap shadow-xl font-mono leading-relaxed pointer-events-none">
-            {text}
+            {displayText}
           </div>
         )}
         {label && (

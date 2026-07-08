@@ -5,6 +5,8 @@ import { TarotCards } from './TarotCards';
 import { ArchaeologyEvent } from './ArchaeologyEvent';
 import { getRandomArtifact, type Artifact } from '../lib/archaeology';
 import { PixelCat } from './LivingCats/PixelCat';
+import { navigate } from 'astro:transitions/client';
+
 export function Experience() {
   const [step, setStep] = useState(1);
   const [desiredContent, setDesiredContent] = useState<string>('');
@@ -31,6 +33,49 @@ export function Experience() {
   const [falseEndingPhase, setFalseEndingPhase] = useState(0);
   const [falseEndingType, setFalseEndingType] = useState<number | null>(null);
   const [falseEndingChoice, setFalseEndingChoice] = useState<string | null>(null);
+
+  // --- V12 STATE PRESERVATION START ---
+  // Load state on mount if returning from a secret room
+  useEffect(() => {
+    if (typeof sessionStorage !== 'undefined') {
+      const isReturning = sessionStorage.getItem('okayimbored_returning_from_secret') === 'true';
+      if (isReturning) {
+        sessionStorage.removeItem('okayimbored_returning_from_secret');
+        try {
+          const saved = sessionStorage.getItem('okayimbored_state');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (typeof parsed.step === 'number') setStep(parsed.step);
+            if (typeof parsed.qStep === 'number') setQStep(parsed.qStep);
+            if (parsed.desiredContent !== undefined) setDesiredContent(parsed.desiredContent);
+            if (parsed.falseEndingActive !== undefined) setFalseEndingActive(parsed.falseEndingActive);
+            if (parsed.falseEndingPhase !== undefined) setFalseEndingPhase(parsed.falseEndingPhase);
+            if (parsed.falseEndingType !== undefined) setFalseEndingType(parsed.falseEndingType);
+            if (parsed.falseEndingChoice !== undefined) setFalseEndingChoice(parsed.falseEndingChoice);
+          }
+        } catch (e) {
+          console.error('Failed to restore state', e);
+        }
+      }
+    }
+  }, []);
+
+  // Save state whenever it changes
+  useEffect(() => {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('okayimbored_state', JSON.stringify({
+        step,
+        qStep,
+        desiredContent,
+        falseEndingActive,
+        falseEndingPhase,
+        falseEndingType,
+        falseEndingChoice
+      }));
+    }
+  }, [step, qStep, desiredContent, falseEndingActive, falseEndingPhase, falseEndingType, falseEndingChoice]);
+  // --- V12 STATE PRESERVATION END ---
+
   // 1. Initial rare event check
   useEffect(() => {
     const now = new Date();
@@ -52,6 +97,19 @@ export function Experience() {
       }, 5000);
     }
   }, []); // Run once on mount
+
+  // Midnight check for After Hours secret room
+  useEffect(() => {
+    const now = new Date();
+    const isLateNight = now.getHours() >= 0 && now.getHours() < 6;
+    if (isLateNight && Math.random() < 0.05) { // 5% chance on mount if late night
+      const t = setTimeout(() => {
+        if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true');
+        navigate('/after-hours');
+      }, 3000);
+      return () => clearTimeout(t);
+    }
+  }, []);
 
   // 2. Initialize session
   useEffect(() => {
@@ -212,6 +270,15 @@ export function Experience() {
 
   const nextStep = () => {
     handleInteraction();
+
+    // Random secret room discovery (0.8% chance)
+    if (step > 1 && step < 8 && Math.random() < 0.008) {
+      const secretRooms = ['/quiet', '/window', '/attic', '/basement', '/rooftop', '/wait', '/radio'];
+      const randomRoom = secretRooms[Math.floor(Math.random() * secretRooms.length)];
+      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true');
+      navigate(randomRoom);
+      return;
+    }
 
     // Occasional internet archaeology interruption (5% chance)
     if (step > 1 && step < 7 && !isRareEventActive && !isArchaeologyActive && Math.random() < 0.05) {
@@ -615,6 +682,9 @@ export function Experience() {
                   <li>Listen to one song from childhood.</li>
                   <li>Walk around for two minutes.</li>
                   <li>Or honestly, just go to sleep.</li>
+                  <li className="text-[10px] text-white/10 hover:text-white/35 transition-colors pt-2">
+                    <a onClick={(e) => { e.preventDefault(); if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true'); navigate('/rooftop'); }} href="/rooftop" className="hover:underline cursor-pointer">Climb to the roof.</a> or <a onClick={(e) => { e.preventDefault(); if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true'); navigate('/wait'); }} href="/wait" className="hover:underline cursor-pointer">wait here.</a>
+                  </li>
                 </ul>
               </div>
 

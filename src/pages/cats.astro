@@ -1,25 +1,36 @@
 ---
-import CatsShowcase from '../components/LivingCats/CatsShowcase';
+import Layout from '../layouts/Layout.astro';
+import { PixelCat } from '../components/LivingCats/PixelCat';
 ---
 
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cats — dev preview</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { min-height: 100dvh; background: #0a0a0a; color: white; font-family: 'Inter', sans-serif; }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #111; }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-  </style>
-</head>
-<body>
-  <CatsShowcase client:load />
-</body>
-</html>
+<Layout title="Cats" noindex={true}>
+  <div class="flex flex-col items-center justify-center min-h-[400px] space-y-8 select-none">
+    <div class="w-16 h-16 opacity-75">
+      <PixelCat state="sleeping" client:load />
+    </div>
+    
+    <button 
+      id="cat-return-btn" 
+      class="text-xs text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest font-mono cursor-pointer"
+    >
+      go back.
+    </button>
+  </div>
+</Layout>
+
+<script>
+  import { navigate } from 'astro:transitions/client';
+  
+  const setupCatReturn = () => {
+    const btn = document.getElementById('cat-return-btn');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        sessionStorage.setItem('okayimbored_returning_from_secret', 'true');
+        navigate('/');
+      });
+    }
+  };
+
+  setupCatReturn();
+  document.addEventListener('astro:page-load', setupCatReturn);
+</script>

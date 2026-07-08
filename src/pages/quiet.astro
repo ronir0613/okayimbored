@@ -1,0 +1,75 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Quiet" noindex={true}>
+  <div class="flex flex-col items-center justify-center min-h-[400px] select-none text-center relative w-full">
+    {/* Faint ticking clock */}
+    <div id="quiet-clock" class="absolute top-4 text-[10px] font-mono text-white/10 tracking-widest">
+      00:00:00
+    </div>
+
+    {/* The main quiet sentence */}
+    <p id="quiet-sentence" class="text-lg sm:text-xl text-white/40 font-light font-mono transition-opacity duration-1000 opacity-0">
+      ...
+    </p>
+
+    {/* Return button that slowly fades in */}
+    <button 
+      id="quiet-back-btn"
+      class="absolute bottom-4 text-[10px] font-mono text-white/5 hover:text-white/30 transition-all uppercase tracking-widest opacity-0 cursor-pointer duration-[2000ms]"
+    >
+      go back.
+    </button>
+  </div>
+</Layout>
+
+<script>
+  import { navigate } from 'astro:transitions/client';
+
+  const sentences = [
+    "nothing happens here.",
+    "stay as long as you'd like.",
+    "the world can wait a moment.",
+    "just breathe.",
+    "a quiet corner on a loud internet."
+  ];
+
+  const initQuiet = () => {
+    // 1. Set random sentence
+    const sentenceEl = document.getElementById('quiet-sentence');
+    if (sentenceEl) {
+      const randomSentence = sentences[Math.floor(Math.random() * sentences.length)];
+      sentenceEl.textContent = randomSentence;
+      sentenceEl.classList.remove('opacity-0');
+    }
+
+    // 2. Start faint ticking clock
+    const clockEl = document.getElementById('quiet-clock');
+    const updateQuietClock = () => {
+      if (clockEl) {
+        const now = new Date();
+        clockEl.textContent = now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
+    };
+    updateQuietClock();
+    const interval = setInterval(updateQuietClock, 1000);
+
+    // 3. Fade in return button slowly after 3 seconds
+    const btn = document.getElementById('quiet-back-btn');
+    if (btn) {
+      setTimeout(() => {
+        btn.classList.remove('opacity-0');
+      }, 3000);
+
+      btn.addEventListener('click', () => {
+        clearInterval(interval);
+        sessionStorage.setItem('okayimbored_returning_from_secret', 'true');
+        navigate('/');
+      });
+    }
+  };
+
+  initQuiet();
+  document.addEventListener('astro:page-load', initQuiet);
+</script>

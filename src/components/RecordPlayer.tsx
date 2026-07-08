@@ -23,11 +23,49 @@ export default function RecordPlayer() {
     return false;
   });
 
+  const [currentPath, setCurrentPath] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname;
+    }
+    return '';
+  });
+
+  // Lowpass filter refs
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const filterNodeRef = useRef<BiquadFilterNode | null>(null);
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+
+  const initAudioContext = () => {
+    if (!audioRef.current || audioCtxRef.current) return;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioContextClass();
+      const source = ctx.createMediaElementSource(audioRef.current);
+      const filter = ctx.createBiquadFilter();
+      
+      filter.type = 'lowpass';
+      
+      const isBasement = window.location.pathname.includes('/basement');
+      const targetFreq = isBasement ? 400 : 20000;
+      filter.frequency.setValueAtTime(targetFreq, ctx.currentTime);
+      
+      source.connect(filter);
+      filter.connect(ctx.destination);
+      
+      audioCtxRef.current = ctx;
+      sourceNodeRef.current = source;
+      filterNodeRef.current = filter;
+    } catch (err) {
+      console.error('Failed to initialize Web Audio API lowpass filter:', err);
+    }
+  };
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
     const checkPath = () => {
       setIsTonight(window.location.pathname.includes('/tonight'));
+      setCurrentPath(window.location.pathname);
     };
 
     checkPath();
@@ -36,6 +74,18 @@ export default function RecordPlayer() {
       window.removeEventListener('astro:page-load', checkPath);
     };
   }, []);
+
+  // Update filter cutoff frequency on path change
+  useEffect(() => {
+    if (!audioCtxRef.current || !filterNodeRef.current) return;
+    const isBasement = currentPath.includes('/basement');
+    const ctx = audioCtxRef.current;
+    if (isBasement) {
+      filterNodeRef.current.frequency.setTargetAtTime(400, ctx.currentTime, 0.3);
+    } else {
+      filterNodeRef.current.frequency.setTargetAtTime(20000, ctx.currentTime, 0.3);
+    }
+  }, [currentPath]);
   
   // Event states
   const [eventText, setEventText] = useState('');
@@ -134,6 +184,11 @@ export default function RecordPlayer() {
   };
 
   const startMusic = (immediate = false) => {
+    initAudioContext();
+    if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume().catch(() => {});
+    }
+
     if (immediate && audioRef.current) {
       audioRef.current.volume = 1;
       audioRef.current.play().catch(() => {});
@@ -157,6 +212,11 @@ export default function RecordPlayer() {
   };
 
   const handlePlayClick = () => {
+    initAudioContext();
+    if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume().catch(() => {});
+    }
+
     if (playerState === 'PLAYING') {
       stopMusic();
       return;
@@ -297,10 +357,61 @@ export default function RecordPlayer() {
 
   if (!mounted) return null;
 
+  const isRadioRoom = currentPath === '/radio' || currentPath === '/radio/';
+
+  const recordGraphic = (
+    <div 
+      onClick={playerState === 'EVENT_BROKEN' && eventStep === 2 ? handleRecordTap : handlePlayClick}
+      className={`relative rounded-full border border-white/10 bg-[#0a0a0a] flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.5)] flex-shrink-0 transition-all duration-1000
+        ${isRadioRoom ? 'w-48 h-48 sm:w-64 sm:h-64 shadow-[0_0_40px_rgba(0,0,0,0.85)] border-white/20' : 'w-8 h-8'}
+        ${(playerState === 'IDLE' || playerState === 'PLAYING') ? 'cursor-pointer hover:border-white/20 hover:scale-[1.03]' : ''}
+        ${(playerState === 'EVENT_BROKEN' && eventStep === 2) ? 'cursor-pointer animate-pulse border-[#a5b4fc]/50' : ''}
+        ${isRadioRoom ? 'order-1' : 'order-2'}
+      `}
+    >
+      <motion.div 
+        className="w-full h-full rounded-full flex items-center justify-center"
+        animate={{ 
+          rotate: playerState === 'PLAYING' ? 360 : 0,
+        }}
+        transition={{ 
+          rotate: { duration: 4, ease: "linear", repeat: Infinity },
+        }}
+      >
+        {/* Vinyl Grooves */}
+        <div className={`absolute rounded-full border border-white/5 transition-all duration-1000 ${isRadioRoom ? 'inset-4 border-white/10' : 'inset-1'}`}></div>
+        <div className={`absolute rounded-full border border-white/5 transition-all duration-1000 ${isRadioRoom ? 'inset-8 border-white/10' : 'inset-2'}`}></div>
+        {isRadioRoom && (
+          <>
+            <div className="absolute inset-12 rounded-full border border-white/5"></div>
+            <div className="absolute inset-16 rounded-full border border-white/5"></div>
+          </>
+        )}
+        {/* Center Label */}
+        <div className={`rounded-full ${playerState === 'PLAYING' ? 'bg-[#a5b4fc]/40' : 'bg-white/10'} flex items-center justify-center transition-all duration-1000
+          ${isRadioRoom ? 'w-16 h-16' : 'w-2.5 h-2.5'}
+        `}>
+          <div className={`bg-black rounded-full transition-all duration-1000 ${isRadioRoom ? 'w-3 h-3' : 'w-0.5 h-0.5'}`}></div>
+        </div>
+      </motion.div>
+
+      {/* Needle / Tone Arm dot */}
+      <div 
+        className={`absolute rounded-full bg-white/20 transition-all duration-1000 origin-bottom-left
+          ${isRadioRoom ? '-right-4 top-4 w-6 h-6' : '-right-1 top-1 w-1.5 h-1.5'}
+          ${playerState === 'PLAYING' ? 'rotate-12 translate-x-[-4px] translate-y-[4px]' : '-rotate-45'}
+        `} 
+      />
+    </div>
+  );
+
   return (
     <div 
       id="record-player-widget"
-      className={`${isTonight ? 'absolute' : 'fixed'} top-4 right-4 md:top-6 md:right-6 z-50 flex flex-col items-end pointer-events-auto`}
+      className={isRadioRoom 
+        ? "fixed inset-0 z-40 flex flex-col items-center justify-center pointer-events-auto bg-[#050505]/40"
+        : `${isTonight ? 'absolute' : 'fixed'} top-4 right-4 md:top-6 md:right-6 z-50 flex flex-col items-end pointer-events-auto transition-all duration-1000`
+      }
       style={{ fontFamily: "'Space Mono', monospace" }}
     >
       <audio 
@@ -310,15 +421,15 @@ export default function RecordPlayer() {
         preload="auto"
       />
 
-      <div className="flex items-center gap-3">
+      <div className={`flex transition-all duration-1000 ${isRadioRoom ? 'flex-col items-center gap-8' : 'flex-row items-center gap-3'}`}>
         {/* Text Area */}
-        <div className="text-right">
+        <div className={`transition-all duration-1000 ${isRadioRoom ? 'text-center order-2 mt-4' : 'text-right order-1'}`}>
           <AnimatePresence mode="wait">
             {playerState === 'LOADING' && (
               <motion.div 
                 key="loading"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="text-xs text-white/50 tracking-wider"
+                className={`text-xs text-white/50 tracking-wider ${isRadioRoom ? 'text-sm' : ''}`}
               >
                 loading tape...
               </motion.div>
@@ -327,52 +438,26 @@ export default function RecordPlayer() {
               <motion.div 
                 key="playing"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex flex-col items-end group cursor-pointer max-w-[120px] sm:max-w-[200px] md:max-w-none"
+                className={`flex flex-col group cursor-pointer ${isRadioRoom ? 'items-center max-w-sm' : 'items-end max-w-[120px] sm:max-w-[200px] md:max-w-none'}`}
                 onClick={changeStation}
                 title="Click to change station"
               >
-                <span className="text-[10px] text-white/40 mb-0.5">now playing:</span>
-                <span className="text-xs text-[#a5b4fc]/80 transition-colors group-hover:text-[#a5b4fc] group-hover:drop-shadow-[0_0_4px_rgba(165,180,252,0.5)] truncate w-full text-right">
+                <span className={`text-white/40 mb-0.5 ${isRadioRoom ? 'text-xs' : 'text-[10px]'}`}>now playing:</span>
+                <span className={`text-[#a5b4fc]/80 transition-colors group-hover:text-[#a5b4fc] group-hover:drop-shadow-[0_0_4px_rgba(165,180,252,0.5)] truncate w-full ${isRadioRoom ? 'text-base text-center font-mono' : 'text-xs text-right'}`}>
                   {STATIONS[stationIndex].name}
                 </span>
+                {isRadioRoom && (
+                  <span className="text-[10px] text-white/20 mt-2 font-mono hover:text-white/45 transition-colors">
+                    (click text to change track)
+                  </span>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
         {/* Record Graphic */}
-        <div 
-          onClick={playerState === 'EVENT_BROKEN' && eventStep === 2 ? handleRecordTap : handlePlayClick}
-          className={`relative w-8 h-8 rounded-full border border-white/10 bg-[#0a0a0a] flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.5)] flex-shrink-0
-            ${(playerState === 'IDLE' || playerState === 'PLAYING') ? 'cursor-pointer hover:border-white/20 hover:shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-all' : ''}
-            ${(playerState === 'EVENT_BROKEN' && eventStep === 2) ? 'cursor-pointer animate-pulse border-[#a5b4fc]/50' : ''}
-          `}
-        >
-          <motion.div 
-            className="w-full h-full rounded-full flex items-center justify-center"
-            animate={{ 
-              rotate: playerState === 'PLAYING' ? 360 : 0,
-            }}
-            transition={{ 
-              rotate: { duration: 4, ease: "linear", repeat: Infinity },
-            }}
-          >
-            {/* Vinyl Grooves */}
-            <div className="absolute inset-1 rounded-full border border-white/5"></div>
-            <div className="absolute inset-2 rounded-full border border-white/5"></div>
-            {/* Center Label */}
-            <div className={`w-2.5 h-2.5 rounded-full ${playerState === 'PLAYING' ? 'bg-[#a5b4fc]/40' : 'bg-white/10'} flex items-center justify-center transition-colors duration-1000`}>
-              <div className="w-0.5 h-0.5 bg-black rounded-full"></div>
-            </div>
-          </motion.div>
-
-          {/* Needle / Tone Arm dot */}
-          <div 
-            className={`absolute -right-1 top-1 w-1.5 h-1.5 rounded-full bg-white/20 transition-transform duration-1000 origin-bottom-left
-              ${playerState === 'PLAYING' ? 'rotate-12 translate-x-[-2px] translate-y-[2px]' : '-rotate-45'}
-            `} 
-          />
-        </div>
+        {recordGraphic}
       </div>
 
       {/* EVENT OVERLAYS */}

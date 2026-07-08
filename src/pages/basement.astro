@@ -1,0 +1,51 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { PixelCat } from '../components/LivingCats/PixelCat';
+---
+
+<Layout title="The Basement" noindex={true}>
+  <div class="flex flex-col items-center justify-center min-h-[400px] select-none text-center relative w-full px-4">
+    
+    {/* Optional sleeping cat in the corner */}
+    <div id="basement-cat" class="hidden absolute bottom-12 left-12 w-12 h-12 opacity-40 hover:opacity-75 transition-opacity">
+      <PixelCat state="sleeping" client:load />
+    </div>
+
+    {/* Minimal basement text */}
+    <p class="text-xs sm:text-sm font-mono text-white/30 tracking-widest font-light leading-relaxed">
+      there isn't much down here.
+    </p>
+
+    {/* Return button */}
+    <button 
+      id="basement-back-btn"
+      class="text-xs font-mono text-white/15 hover:text-white/45 transition-colors uppercase tracking-widest cursor-pointer mt-12"
+    >
+      go back.
+    </button>
+  </div>
+</Layout>
+
+<script>
+  import { navigate } from 'astro:transitions/client';
+
+  const initBasement = () => {
+    // 20% chance to show a sleeping cat in the corner
+    const catEl = document.getElementById('basement-cat');
+    if (catEl) {
+      if (Math.random() < 0.2) {
+        catEl.classList.remove('hidden');
+      } else {
+        catEl.classList.add('hidden');
+      }
+    }
+
+    const btn = document.getElementById('basement-back-btn');
+    if (btn) {
+      btn.addEventListener('click', () => { sessionStorage.setItem('okayimbored_returning_from_secret', 'true'); navigate('/'); });
+    }
+  };
+
+  initBasement();
+  document.addEventListener('astro:page-load', initBasement);
+</script>

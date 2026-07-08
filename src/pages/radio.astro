@@ -1,0 +1,31 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="The Radio Room" noindex={true}>
+  <div class="flex flex-col items-center justify-center min-h-[450px] select-none relative w-full">
+    {/* The Record Player is persisted globally and will animate to the center of the screen */}
+    
+    {/* Return button */}
+    <button 
+      id="radio-back-btn"
+      class="absolute bottom-4 text-xs font-mono text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest cursor-pointer z-50"
+    >
+      go back.
+    </button>
+  </div>
+</Layout>
+
+<script>
+  import { navigate } from 'astro:transitions/client';
+
+  const initRadioRoom = () => {
+    const btn = document.getElementById('radio-back-btn');
+    if (btn) {
+      btn.addEventListener('click', () => { sessionStorage.setItem('okayimbored_returning_from_secret', 'true'); navigate('/'); });
+    }
+  };
+
+  initRadioRoom();
+  document.addEventListener('astro:page-load', initRadioRoom);
+</script>
