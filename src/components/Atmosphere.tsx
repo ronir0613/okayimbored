@@ -1,8 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { getCurrentShift } from '../lib/shift';
 
 export default function Atmosphere() {
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const cursorRef = useRef({ x: -100, y: -100 });
+
+  // Shift-aware base filter
+  const shiftFilter = (() => {
+    const s = getCurrentShift();
+    if (s === 'afterhours') return 'brightness(0.82)';
+    if (s === 'night') return 'brightness(0.91)';
+    return '';
+  })();
 
   // Time & Cat states
   const [timeFilter, setTimeFilter] = useState('');
@@ -84,7 +93,7 @@ export default function Atmosphere() {
 
   // Apply filters to body
   useEffect(() => {
-    const filters = [timeFilter, catTemperature, falseEndingFilter].filter(Boolean).join(' ');
+    const filters = [shiftFilter, timeFilter, catTemperature, falseEndingFilter].filter(Boolean).join(' ');
     document.body.style.filter = filters;
   }, [timeFilter, catTemperature, falseEndingFilter]);
 

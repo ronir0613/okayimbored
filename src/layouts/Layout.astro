@@ -5,6 +5,7 @@ import RecordPlayer from '../components/RecordPlayer';
 import LivingCats from '../components/LivingCats/LivingCats';
 import Atmosphere from '../components/Atmosphere';
 import CuriosityEvent from '../components/CuriosityEvent';
+import ShiftAmbience from '../components/ShiftAmbience';
 import { ClientRouter } from 'astro:transitions';
 
 interface Props {
@@ -86,6 +87,7 @@ const {
 		<LivingCats client:idle />
 		<Atmosphere client:load transition:persist="atmosphere" />
 		<CuriosityEvent client:load transition:persist="curiosity" />
+		<ShiftAmbience client:idle transition:persist="shift-ambience" />
 
 		<script>
 			const updateSecretState = () => {

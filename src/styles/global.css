@@ -107,3 +107,22 @@ body.secret-room:not(.radio-room) #record-player-widget {
   pointer-events: none !important;
   transition: opacity 1s ease-in-out;
 }
+
+/* V15: Shift visual treatments — subtle, never loud */
+body.shift-day {
+  background-color: #0a0a0a;
+}
+
+body.shift-evening {
+  background-color: #080808;
+}
+
+body.shift-night {
+  background-color: #060606;
+  animation: bg-breath 90s ease-in-out infinite alternate; /* slower breath */
+}
+
+body.shift-afterhours {
+  background-color: #040404;
+  animation: bg-breath 120s ease-in-out infinite alternate; /* very slow */
+}

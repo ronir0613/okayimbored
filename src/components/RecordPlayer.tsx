@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getCurrentShift, getShiftAudioConfig } from '../lib/shift';
 
 const STATIONS = [
   { id: 'station-01', name: 'late night radio', file: '/music/juraganvisi-serene-felt-piano-with-airy-pads-and-gentle-vinyl-crackle-ambience-408702.mp3' },
@@ -191,6 +192,8 @@ export default function RecordPlayer() {
       audioCtxRef.current.resume().catch(() => {});
     }
 
+    const shiftAudio = getShiftAudioConfig(getCurrentShift());
+
     if (immediate && audioRef.current) {
       audioRef.current.volume = 1;
       audioRef.current.play().catch(() => {});
@@ -201,8 +204,15 @@ export default function RecordPlayer() {
     setPlayerState('LOADING');
     setTimeout(() => {
       setPlayerState('PLAYING');
-      fadeAudio(1);
-    }, 2500);
+      // Start at shift volume then fade to full
+      if (audioRef.current) audioRef.current.volume = shiftAudio.startVolume;
+      if (shiftAudio.startVolume < 1) {
+        // Fade up from shift start volume
+        fadeAudio(1);
+      } else {
+        fadeAudio(1);
+      }
+    }, shiftAudio.fadeInDuration);
   };
 
   const stopMusic = () => {
@@ -230,6 +240,8 @@ export default function RecordPlayer() {
 
     // Probability Engine
     const rand = Math.random();
+    const shift = getCurrentShift();
+    const isAfterHours = shift === 'afterhours';
     if (rand < 0.001) {
       // 0.1% Raccoon
       startRaccoonEvent();
@@ -239,6 +251,9 @@ export default function RecordPlayer() {
     } else if (rand < 0.009) {
       // 0.5% Broken
       startBrokenEvent();
+    } else if (isAfterHours && rand < 0.029) {
+      // extra 2% after-hours: forgot the record
+      startForgotRecordEvent();
     } else {
       // Normal playback
       startMusic();
@@ -258,6 +273,20 @@ export default function RecordPlayer() {
         }, 500);
       });
     }
+  };
+
+  // --- EVENT: BROKEN ---
+  const startForgotRecordEvent = async () => {
+    setPlayerState('EVENT_BROKEN');
+    setEventStep(0);
+    const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+    await wait(800);
+    setEventText('night shift forgot where they put the record.');
+    await wait(3000);
+    setEventText('found it.');
+    await wait(1500);
+    setEventText('');
+    startMusic(true);
   };
 
   // --- EVENT: BROKEN ---

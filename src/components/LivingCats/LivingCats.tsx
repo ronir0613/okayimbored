@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LivingCat, CAT_SIZE } from './LivingCat';
 import type { CatState } from './PixelCat';
+import { getCurrentShift, getShiftCatConfig } from '../../lib/shift';
 
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -173,12 +174,14 @@ async function runOrchestrator(c: any, startupTime: number) {
   // But we decide the path now.
   const isPolaroid = window.location.pathname.includes('/polaroid');
 
+  const shiftCat = getShiftCatConfig(getCurrentShift());
+
   const paths = isPolaroid ? [
     { item: 'POLAROID_WALK', weight: 50 },
     { item: 'POLAROID_SIT', weight: 50 }
   ] : [
-    { item: 'SLEEPER', weight: 20 },
-    { item: 'WANDERER', weight: 30 },
+    { item: 'SLEEPER', weight: shiftCat.sleeperWeight },
+    { item: 'WANDERER', weight: shiftCat.wandererWeight },
     { item: 'OBSERVER', weight: 15 },
     { item: 'RECORD_PLAYER', weight: 10 },
     { item: 'PEEKER', weight: 15 },
@@ -189,14 +192,14 @@ async function runOrchestrator(c: any, startupTime: number) {
     { item: 'GHOST', weight: 0.2 },
     { item: '3AM', weight: new Date().getHours() === 3 ? 10 : 0 },
     { item: 'EMPLOYEE', weight: 0.05 },
-    { item: 'CLOSED', weight: 0.1 },
+    { item: 'CLOSED', weight: shiftCat.afterHoursCloseText ? 0.5 : 0.1 },
     { item: 'JUDGE', weight: 1 },
     { item: 'ENDING', weight: 1 },
     { item: 'CAT_MODE', weight: 0.01 },
   ];
 
   const chosenPath = pickWeighted(paths);
-  console.log('LivingCats path chosen:', chosenPath);
+  console.log('LivingCats path chosen:', chosenPath, '| shift cat config:', shiftCat);
 
   // For most paths, we wait a bit so it feels accidental.
   const initialDelay = 10000 + Math.random() * 5000; // 10-15 seconds
@@ -284,7 +287,7 @@ async function runOrchestrator(c: any, startupTime: number) {
       await wait(4000);
       
       // rare variant: sleep
-      if (Math.random() < 0.2) {
+      if (Math.random() < shiftCat.wanderSleepChance) {
         c.update(id, { state: 'idle_to_sleeping' });
         await wait(600);
         c.update(id, { state: 'sleeping' });
@@ -344,7 +347,7 @@ async function runOrchestrator(c: any, startupTime: number) {
       c.update(id, { state: 'idle', duration: 0 });
       await wait(5000);
       
-      if (Math.random() < 0.2) {
+      if (Math.random() < shiftCat.recordSleepChance) {
         c.update(id, { state: 'idle_to_sleeping' });
         await wait(600);
         c.update(id, { state: 'sleeping' });

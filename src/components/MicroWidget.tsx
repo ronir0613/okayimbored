@@ -1,13 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getCurrentShift } from '../lib/shift';
 
-const RARE_STATES = [
-  { chars: ['3', 'A', 'M', '!'], bottom: 'NOW' },
-  { chars: ['I', 'N', 'D', ' '], bottom: '#127' },
-  { chars: ['Y', 'O', 'U', '?'], bottom: 'HERE' },
-  { chars: ['C', 'A', 'T', ' '], bottom: 'OK' },
-  { chars: ['S', 'Y', 'S', '!'], bottom: 'SLP' },
-];
+const RARE_STATES_BY_SHIFT: Record<string, {chars: string[], bottom: string}[]> = {
+  day: [
+    { chars: ['H', 'E', 'Y', ' '], bottom: 'GM' },
+    { chars: ['N', 'B', 'Y', ' '], bottom: 'WRK' },
+    { chars: ['C', 'A', 'T', ' '], bottom: 'OK' },
+  ],
+  evening: [
+    { chars: ['E', 'V', 'N', ' '], bottom: 'HI' },
+    { chars: ['L', 'N', 'G', ' '], bottom: 'DAY' },
+    { chars: ['Y', 'O', 'U', '?'], bottom: 'HERE' },
+  ],
+  night: [
+    { chars: ['N', 'S', 'T', ' '], bottom: 'LATE' },
+    { chars: ['S', 'Y', 'S', '!'], bottom: 'SLP' },
+    { chars: ['Q', 'T', ' ', ' '], bottom: 'SHHH' },
+    { chars: ['3', 'A', 'M', '!'], bottom: 'NOW' },
+  ],
+  afterhours: [
+    { chars: ['.', '.', '.', ' '], bottom: 'SHH' },
+    { chars: ['C', 'L', 'K', ' '], bottom: 'OUT' },
+    { chars: ['I', 'N', 'D', ' '], bottom: '#127' },
+  ],
+};
 
 export default function MicroWidget() {
   const [mounted, setMounted] = useState(false);
@@ -24,9 +41,11 @@ export default function MicroWidget() {
     const updateTime = () => {
       const now = new Date();
       
-      const isRare = Math.random() < 0.005; // Make rare states much rarer to avoid interrupting the time
+      const isRare = Math.random() < 0.005;
       if (isRare) {
-        const randomState = RARE_STATES[Math.floor(Math.random() * RARE_STATES.length)];
+        const shift = getCurrentShift();
+        const pool = RARE_STATES_BY_SHIFT[shift] ?? RARE_STATES_BY_SHIFT.night;
+        const randomState = pool[Math.floor(Math.random() * pool.length)];
         setDisplayState(randomState);
         return;
       }
