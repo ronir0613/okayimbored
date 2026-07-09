@@ -47,11 +47,12 @@ const MEMORIES = [
   <a href="/basement" className="hover:text-white/60 transition-colors cursor-pointer">'"Someone kept checking\nthe basement."'</a>
 ];
 
-const ARCHIVED_MESSAGES = [
+const ARCHIVED_MESSAGES: React.ReactNode[] = [
   '"This ending was retired."',
   '"This joke stopped being funny."',
   '"We thought this sounded\ntoo serious."',
-  '"We couldn\'t make this work."'
+  '"We couldn\'t make this work."',
+  <a href="/notices" className="hover:text-white/80 transition-colors cursor-pointer">"We left a note on the board."</a>
 ];
 
 const LF_ITEMS = ['one sock', 'house keys', 'bus ticket', 'browser tab', 'desktop wallpaper', 'a good idea', 'patience'];

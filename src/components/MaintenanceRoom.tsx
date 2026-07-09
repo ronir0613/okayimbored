@@ -3,7 +3,7 @@ import { PixelCat } from './LivingCats/PixelCat';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- Static Data ---
-const TOOLBOX_ITEMS = [
+const TOOLBOX_ITEMS: React.ReactNode[] = [
   'Small screwdriver.',
   'Electrical tape.',
   'One fish.',
@@ -11,7 +11,7 @@ const TOOLBOX_ITEMS = [
   'Flashlight.',
   'Broken cassette.',
   'Coffee mug.',
-  'Sticky notes.',
+  <a href="/notices" className="hover:text-white/80 transition-colors cursor-pointer">Sticky notes.</a>,
   'Tiny ladder.',
   'Unknown key.'
 ];

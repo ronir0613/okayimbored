@@ -18,7 +18,7 @@ const STATUSES = [
   'Unknown', 'Staring at absolutely nothing', 'Under Investigation'
 ];
 
-const MEMOS = [
+const MEMOS: React.ReactNode[] = [
   "Please stop sleeping\ninside the record player.",
   "Reminder:\n\nThe timestamp\nis not a bed.",
   "The cats have requested\nmore cardboard boxes.",
@@ -27,6 +27,7 @@ const MEMOS = [
   <span key="basement">Someone left the door to<br/>the <a href="/basement" className="underline decoration-white/20 underline-offset-4 hover:text-white/60 transition-colors cursor-pointer">basement</a> open again.</span>,
   "Payroll is complicated.",
   "Human Resources has given up.",
+  <span key="notices">Please stop pinning things to<br/>the <a href="/notices" className="underline decoration-white/20 underline-offset-4 hover:text-white/60 transition-colors cursor-pointer">notice board</a>.</span>,
   "The cats approved this."
 ];
 

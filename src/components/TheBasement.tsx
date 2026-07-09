@@ -46,11 +46,12 @@ const SHELF_ITEMS = [
   'A Polaroid.'
 ];
 
-const WALL_NOTES = [
+const WALL_NOTES: React.ReactNode[] = [
   'Back in five minutes.',
   'We never came back.',
   'The cats know.',
-  'If you\'re reading this,\nyou\'ve gone too far.'
+  'If you\'re reading this,\nyou\'ve gone too far.',
+  <a href="/notices" className="hover:text-white/60 transition-colors cursor-pointer">A loose piece of paper.</a>
 ];
 
 const getRandomElement = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
