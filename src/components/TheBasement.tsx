@@ -395,7 +395,9 @@ export default function TheBasement() {
              <div className="text-[8px] font-sans">000000</div>
           </div>
           <div className="text-center relative">
-             <div className="text-[10px] tracking-widest">A ladder.</div>
+             <div className="text-[10px] tracking-widest">
+               <a href="/maintenance" className="hover:text-white/60 transition-colors cursor-pointer">A ladder.</a>
+             </div>
              {catPositions.some(c => c.type === 'eyes') && (
                <div className="absolute top-0 right-0 text-[10px] tracking-widest text-yellow-500/50 animate-pulse">
                  . .
