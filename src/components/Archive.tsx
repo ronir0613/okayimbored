@@ -114,7 +114,7 @@ export default function Archive() {
             Contents unavailable.
           </div>
           <div className="absolute -bottom-4 -right-4 w-8 h-8 opacity-50">
-            <PixelCat state="staring" />
+            <PixelCat state="idle" />
           </div>
         </div>
       </div>
@@ -135,7 +135,7 @@ export default function Archive() {
 
         {/* Ambient Cat on the header */}
         <div className="absolute -top-12 sm:top-2 right-12 sm:-right-8 w-12 h-12 opacity-30">
-          <PixelCat state="cleaning" />
+          <PixelCat state="idle" />
         </div>
       </div>
 
@@ -170,7 +170,7 @@ export default function Archive() {
         </div>
         {/* Ambient Cat walking */}
         <div className="absolute -top-6 right-1/4 w-10 h-10 opacity-20 hidden sm:block">
-          <PixelCat state="walking" />
+          <PixelCat state="walking_right" />
         </div>
         <div className="flex flex-wrap gap-12 justify-center sm:justify-start">
           {RETIRED_CARDS.map((card, i) => (
@@ -225,7 +225,11 @@ export default function Archive() {
           {CAT_INCIDENTS.map((inc, i) => (
             <div key={i} className="flex flex-col gap-3">
               <div className="text-[10px] uppercase tracking-widest text-white/40 underline decoration-white/10 underline-offset-4">
-                {inc.title}
+                {inc.title === 'Incident #011' ? (
+                  <a href="/cats" className="hover:text-white/80 transition-colors cursor-pointer">{inc.title}</a>
+                ) : (
+                  inc.title
+                )}
               </div>
               <div className="text-xs text-white/50 whitespace-pre-line leading-relaxed">
                 {inc.text}

@@ -310,6 +310,14 @@ export const RadioRoom: React.FC = () => {
             <span className="text-[9px] font-mono text-red-500/80 tracking-widest font-bold">ON AIR</span>
           </div>
 
+          {/* Dept Sticker */}
+          <a 
+            href="/cats" 
+            className="absolute -bottom-6 right-6 text-[8px] font-mono text-white/10 hover:text-white/40 transition-colors tracking-[0.3em] uppercase cursor-pointer"
+          >
+            Property of Dept.
+          </a>
+
           <div className="flex items-center gap-4 sm:gap-8">
             {/* Left Tape Reel */}
             <motion.div 
