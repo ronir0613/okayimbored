@@ -127,8 +127,10 @@ export default function RecordPlayer() {
   useEffect(() => {
     if (playerState === 'PLAYING') {
       localStorage.setItem('okayimbored_playing', 'true');
+      window.dispatchEvent(new Event('audio:state_change'));
     } else if (playerState === 'IDLE') {
       localStorage.setItem('okayimbored_playing', 'false');
+      window.dispatchEvent(new Event('audio:state_change'));
     }
   }, [playerState]);
 

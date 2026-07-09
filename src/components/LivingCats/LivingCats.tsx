@@ -75,7 +75,8 @@ export default function LivingCats() {
     if (typeof window !== 'undefined') {
       const isTonightPage = window.location.pathname.includes('/tonight');
       const isSecretPage = ['/quiet', '/window', '/attic', '/after-hours', '/basement', '/rooftop', '/wait', '/cats', '/radio'].some(p => window.location.pathname.startsWith(p)) || document.title.toLowerCase().includes('404');
-      if (isTonightPage || isSecretPage) {
+      const isPolaroid = window.location.pathname.includes('/polaroid');
+      if (isTonightPage || (isSecretPage && !isPolaroid)) {
         return;
       }
     }
@@ -170,7 +171,12 @@ export default function LivingCats() {
 async function runOrchestrator(c: any, startupTime: number) {
   // Wait a bit before spawning anything (35-50s for normal paths)
   // But we decide the path now.
-  const paths = [
+  const isPolaroid = window.location.pathname.includes('/polaroid');
+
+  const paths = isPolaroid ? [
+    { item: 'POLAROID_WALK', weight: 50 },
+    { item: 'POLAROID_SIT', weight: 50 }
+  ] : [
     { item: 'SLEEPER', weight: 20 },
     { item: 'WANDERER', weight: 30 },
     { item: 'OBSERVER', weight: 15 },
@@ -181,11 +187,11 @@ async function runOrchestrator(c: any, startupTime: number) {
     { item: 'LOST', weight: 1 },
     { item: 'INSPECTOR', weight: 2 },
     { item: 'GHOST', weight: 0.2 },
-    { item: '3AM', weight: new Date().getHours() === 3 ? 10 : 0 }, // Very high chance if it's 3AM
+    { item: '3AM', weight: new Date().getHours() === 3 ? 10 : 0 },
     { item: 'EMPLOYEE', weight: 0.05 },
     { item: 'CLOSED', weight: 0.1 },
     { item: 'JUDGE', weight: 1 },
-    { item: 'ENDING', weight: 1 }, // Equal to others, but only triggers at the end
+    { item: 'ENDING', weight: 1 },
     { item: 'CAT_MODE', weight: 0.01 },
   ];
 
@@ -196,6 +202,38 @@ async function runOrchestrator(c: any, startupTime: number) {
   const initialDelay = 10000 + Math.random() * 5000; // 10-15 seconds
 
   switch (chosenPath) {
+    case 'POLAROID_WALK': {
+      await wait(5000 + Math.random() * 5000); // 5-10 seconds
+      const y = c.sh() - CAT_SIZE; // bottom of screen
+      const startLeft = Math.random() < 0.5;
+      const startX = startLeft ? -CAT_SIZE : c.sw() + CAT_SIZE;
+      const endX = startLeft ? c.sw() + CAT_SIZE : -CAT_SIZE;
+      
+      const id = c.spawn({ x: startX, y, state: startLeft ? 'walking_right' : 'walking_left', opacity: 1 });
+      await wait(100);
+      
+      const walkDur = Math.abs(endX - startX) / 30; // 30px/s
+      c.update(id, { x: endX, duration: walkDur });
+      await wait(walkDur * 1000);
+      c.remove(id);
+      break;
+    }
+
+    case 'POLAROID_SIT': {
+      await wait(5000 + Math.random() * 5000);
+      const x = c.sw() / 2 - CAT_SIZE / 2;
+      const y = c.sh() - CAT_SIZE; // bottom center, below the photo
+      const id = c.spawn({ x, y, opacity: 0, state: 'idle' });
+      await wait(100);
+      c.update(id, { opacity: 1, duration: 2 });
+      await wait(2000);
+      c.update(id, { state: 'idle_to_sleeping' });
+      await wait(600);
+      c.update(id, { state: 'sleeping' });
+      // Stays sleeping
+      break;
+    }
+
     case 'SLEEPER': {
       await wait(initialDelay);
       const target = c.getPos('timestamp-widget');

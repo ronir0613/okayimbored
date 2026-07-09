@@ -682,8 +682,12 @@ export function Experience() {
                   <li>Listen to one song from childhood.</li>
                   <li>Walk around for two minutes.</li>
                   <li>Or honestly, just go to sleep.</li>
-                  <li className="text-[10px] text-white/10 hover:text-white/35 transition-colors pt-2">
-                    <a onClick={(e) => { e.preventDefault(); if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true'); navigate('/rooftop'); }} href="/rooftop" className="hover:underline cursor-pointer">Climb to the roof.</a> or <a onClick={(e) => { e.preventDefault(); if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true'); navigate('/wait'); }} href="/wait" className="hover:underline cursor-pointer">wait here.</a>
+                  <li className="text-[10px] text-white/10 hover:text-white/35 transition-colors pt-2 flex flex-wrap gap-1 justify-center">
+                    <a onClick={(e) => { e.preventDefault(); if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true'); navigate('/rooftop'); }} href="/rooftop" className="hover:underline cursor-pointer">Climb to the roof.</a> 
+                    <span>or</span> 
+                    <a onClick={(e) => { e.preventDefault(); if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true'); navigate('/wait'); }} href="/wait" className="hover:underline cursor-pointer">wait here.</a>
+                    <span>or</span>
+                    <a onClick={(e) => { e.preventDefault(); if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true'); navigate('/polaroid'); }} href="/polaroid" className="hover:underline cursor-pointer">find a picture.</a>
                   </li>
                 </ul>
               </div>
