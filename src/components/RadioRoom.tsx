@@ -272,7 +272,7 @@ export const RadioRoom: React.FC = () => {
         <AnimatePresence mode="wait">
           {broadcast && (
             <motion.div
-              key={broadcast}
+              key={React.isValidElement(broadcast) ? broadcast.key : (broadcast as React.Key)}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, transition: { duration: 2 } }}
