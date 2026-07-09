@@ -91,7 +91,7 @@ const {
 
 		<script>
 			const updateSecretState = () => {
-				const secretPaths = ['/quiet', '/window', '/attic', '/after-hours', '/basement', '/rooftop', '/wait', '/cats', '/radio', '/lost-and-found', '/polaroid'];
+				const secretPaths = ['/quiet', '/window', '/attic', '/after-hours', '/basement', '/rooftop', '/wait', '/cats', '/radio', '/lost-and-found', '/polaroid', '/archive'];
 				const path = window.location.pathname;
 				const isSecret = secretPaths.some(p => path === p || path === p + '/') || document.title.toLowerCase().includes('404');
 				
