@@ -106,6 +106,12 @@ const {
 				} else {
 					document.body.classList.remove('radio-room');
 				}
+
+				if (path === '/window' || path === '/window/') {
+					document.body.classList.add('window-room');
+				} else {
+					document.body.classList.remove('window-room');
+				}
 			};
 
 			updateSecretState();

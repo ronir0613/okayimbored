@@ -93,19 +93,29 @@ body.false-ending-active * {
 }
 
 /* Secret Room Styling: Hide standard widgets with a gentle fade */
-body.secret-room #timestamp-widget,
-body.secret-room #micro-widget,
+body.secret-room:not(.window-room) #timestamp-widget,
+body.secret-room:not(.window-room) #micro-widget {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 1s ease-in-out;
+}
+
 body.secret-room #curiosity-container {
   opacity: 0 !important;
   pointer-events: none !important;
   transition: opacity 1s ease-in-out;
 }
 
-/* If it's a secret room but not the radio room, hide the top-right record player too */
-body.secret-room:not(.radio-room) #record-player-widget {
+/* If it's a secret room but not the radio room and not the window room, hide the top-right record player too */
+body.secret-room:not(.radio-room):not(.window-room) #record-player-widget {
   opacity: 0 !important;
   pointer-events: none !important;
   transition: opacity 1s ease-in-out;
+}
+
+/* Hide global cats on window room */
+body.window-room #living-cats-container {
+  display: none !important;
 }
 
 /* V15: Shift visual treatments — subtle, never loud */
