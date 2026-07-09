@@ -24,6 +24,7 @@ const MEMOS = [
   "The cats have requested\nmore cardboard boxes.",
   "Meeting cancelled.\n\nNobody attended.",
   "Someone keeps\nknocking papers off shelves.",
+  <span key="basement">Someone left the door to<br/>the <a href="/basement" className="underline decoration-white/20 underline-offset-4 hover:text-white/60 transition-colors cursor-pointer">basement</a> open again.</span>,
   "Payroll is complicated.",
   "Human Resources has given up.",
   "The cats approved this."
@@ -65,7 +66,7 @@ export default function CatDepartment() {
   
   // States for random generation
   const [boardEmployees, setBoardEmployees] = useState<any[]>([]);
-  const [activeMemos, setActiveMemos] = useState<string[]>([]);
+  const [activeMemos, setActiveMemos] = useState<React.ReactNode[]>([]);
   const [incident, setIncident] = useState<{id: string, text: string} | null>(null);
   const [eotm, setEotm] = useState<{name: string, reason: string} | null>(null);
   const [emails, setEmails] = useState<any[]>([]);
@@ -269,7 +270,7 @@ export default function CatDepartment() {
                 {activeMemos.map((memo, i) => (
                   <div key={i} className="bg-white/[0.03] border border-white/10 p-6 relative">
                     <div className="absolute top-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white/20"></div>
-                    <p className="mt-4 text-xs text-white/60 whitespace-pre-line text-center italic tracking-wider leading-relaxed">
+                    <p className={`mt-4 text-xs text-white/60 text-center italic tracking-wider leading-relaxed ${typeof memo === 'string' ? 'whitespace-pre-line' : ''}`}>
                       {memo}
                     </p>
                   </div>

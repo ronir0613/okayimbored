@@ -44,7 +44,7 @@ const MEMORIES = [
   '"The homepage looked\nvery different."',
   '"We almost changed the logo."',
   '"We never liked that font."',
-  '"Someone kept checking\nthe basement."'
+  <a href="/basement" className="hover:text-white/60 transition-colors cursor-pointer">'"Someone kept checking\nthe basement."'</a>
 ];
 
 const ARCHIVED_MESSAGES = [

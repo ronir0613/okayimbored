@@ -11,7 +11,7 @@ const CHANNELS = [
   { freq: 106.2, name: 'Dead Air' }
 ];
 
-const BROADCASTS: Record<number, string[]> = {
+const BROADCASTS: Record<number, (string | React.ReactNode)[]> = {
   87.7: [
     "someone stayed longer than expected.",
     "the cat is asleep.",
@@ -20,7 +20,7 @@ const BROADCASTS: Record<number, string[]> = {
     "it's raining somewhere.",
     "tonight feels quieter.",
     "three people picked something honest.",
-    "nobody has found the basement today.",
+    <span key="basement">nobody has found the <a href="/basement" className="hover:text-white/60 transition-colors cursor-pointer underline decoration-white/30 underline-offset-4">basement</a> today.</span>,
     "thanks for listening."
   ],
   91.3: [
@@ -77,7 +77,7 @@ const STATIC_NOISES = [
 
 export const RadioRoom: React.FC = () => {
   const [frequencyIndex, setFrequencyIndex] = useState(0);
-  const [broadcast, setBroadcast] = useState<string | null>(null);
+  const [broadcast, setBroadcast] = useState<React.ReactNode | null>(null);
   const [isStatic, setIsStatic] = useState(false);
   const [catState, setCatState] = useState<string | null>(null);
   const [time, setTime] = useState<string>('');
