@@ -9,7 +9,6 @@ import { navigate } from 'astro:transitions/client';
 
 export function Experience() {
   const [step, setStep] = useState(1);
-  const [desiredContent, setDesiredContent] = useState<string>('');
   
   // Conversational questions state (V26)
   const [opening, setOpening] = useState<{text: string, options: string[]} | null>(null);
@@ -17,10 +16,11 @@ export function Experience() {
   const [selectedQuestions, setSelectedQuestions] = useState<{text: string, options: {text: string, reaction: string}[]}[]>([]);
   const [reactions, setReactions] = useState<string[]>([]);
   const [breathingSpace, setBreathingSpace] = useState<string>('');
+  const [timeCaption, setTimeCaption] = useState<string>('');
 
   // Rare events state
   const [isRareEventActive, setIsRareEventActive] = useState(false);
-  const [rareEventContent, setRareEventContent] = useState<{title: string, subtitle?: string} | null>(null);
+  const [rareEventContent, setRareEventContent] = useState<{title: string, subtitle?: string, isMono?: boolean} | null>(null);
   const [hasSeenRareEvent, setHasSeenRareEvent] = useState(false);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
 
@@ -50,7 +50,6 @@ export function Experience() {
           if (saved) {
             const parsed = JSON.parse(saved);
             if (typeof parsed.step === 'number') setStep(parsed.step);
-            if (parsed.desiredContent !== undefined) setDesiredContent(parsed.desiredContent);
             if (parsed.falseEndingActive !== undefined) setFalseEndingActive(parsed.falseEndingActive);
             if (parsed.falseEndingPhase !== undefined) setFalseEndingPhase(parsed.falseEndingPhase);
             if (parsed.falseEndingType !== undefined) setFalseEndingType(parsed.falseEndingType);
@@ -60,6 +59,7 @@ export function Experience() {
             if (parsed.selectedQuestions) setSelectedQuestions(parsed.selectedQuestions);
             if (parsed.reactions) setReactions(parsed.reactions);
             if (parsed.breathingSpace) setBreathingSpace(parsed.breathingSpace);
+            if (parsed.timeCaption) setTimeCaption(parsed.timeCaption);
           }
         } catch (e) {
           console.error('Failed to restore state', e);
@@ -73,7 +73,6 @@ export function Experience() {
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.setItem('okayimbored_state', JSON.stringify({
         step,
-        desiredContent,
         falseEndingActive,
         falseEndingPhase,
         falseEndingType,
@@ -82,10 +81,11 @@ export function Experience() {
         statisticTemplate,
         selectedQuestions,
         reactions,
-        breathingSpace
+        breathingSpace,
+        timeCaption
       }));
     }
-  }, [step, desiredContent, falseEndingActive, falseEndingPhase, falseEndingType, falseEndingChoice, opening, statisticTemplate, selectedQuestions, reactions, breathingSpace]);
+  }, [step, falseEndingActive, falseEndingPhase, falseEndingType, falseEndingChoice, opening, statisticTemplate, selectedQuestions, reactions, breathingSpace, timeCaption]);
   // --- V12 STATE PRESERVATION END ---
 
   // --- V26 CONVERSATION SETUP START ---
@@ -100,8 +100,8 @@ export function Experience() {
 
     const openings = [
       { text: "Are you bored?", options: ["Yes.", "No.", "Sort of."] },
-      { text: "Still awake?", options: ["Unfortunately.", "Very much.", "Barely."] },
-      { text: "Couldn't sleep?", options: ["No.", "Trying to.", "Just woke up."] },
+      { text: "Been here a while?", options: ["Yes.", "Not really.", "Time is blurred."] },
+      { text: "A quiet moment?", options: ["Very.", "Not quite.", "Trying to find one."] },
       { text: "Taking a break?", options: ["Yes.", "Not really.", "From everything."] },
       { text: "Avoiding something?", options: ["Maybe.", "Yes.", "No."] },
       { text: "Just passing through?", options: ["Yes.", "Probably.", "We'll see."] },
@@ -116,10 +116,10 @@ export function Experience() {
     ];
 
     const statsTemplates = [
-      "{boredPercentage}% of visitors tonight said they were procrastinating.",
+      "{boredPercentage}% of visitors recently said they were procrastinating.",
       "{boredPercentage}% chose comfort.",
-      "Most visitors arrived after 10 PM.",
-      "{activeVisitors} people are still wandering around tonight.",
+      "Most visitors arrived here by accident.",
+      "{activeVisitors} people are still wandering around.",
       "{boredPercentage}% said they stayed longer than they expected."
     ];
 
@@ -149,7 +149,7 @@ export function Experience() {
         ]
       },
       {
-        text: "If tonight had a soundtrack...",
+        text: "If this moment had a soundtrack...",
         options: [
           { text: "Quiet.", reaction: "Nice." },
           { text: "Loud.", reaction: "Bold." },
@@ -191,9 +191,19 @@ export function Experience() {
       "The cat walked across the keyboard again."
     ];
 
+    const timeCaptions = [
+      "That's usually when people start opening random websites.",
+      "Time moves at its own pace here.",
+      "You could be doing something else right now.",
+      "We were just wondering when someone would show up.",
+      "It's a good time to take a breath.",
+      "Nothing urgent is happening right now."
+    ];
+
     setOpening(openings[Math.floor(Math.random() * openings.length)]);
     setStatisticTemplate(statsTemplates[Math.floor(Math.random() * statsTemplates.length)]);
     setBreathingSpace(spaces[Math.floor(Math.random() * spaces.length)]);
+    setTimeCaption(timeCaptions[Math.floor(Math.random() * timeCaptions.length)]);
     
     const shuffledQs = [...questionsPool].sort(() => 0.5 - Math.random());
     setSelectedQuestions(shuffledQs.slice(0, 3));
@@ -213,7 +223,7 @@ export function Experience() {
           { title: "Congratulations.", subtitle: `You are today's ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} visitor.` },
           { title: "The card deck is feeling chaotic today.", subtitle: "Go with it." },
           { title: "You opened this at the perfect time.", subtitle: "We don't know why, but you did." },
-          { title: "The cat walked across the keyboard.", subtitle: "ajsdnfklasdjbf" },
+          { title: "The cat walked across the keyboard.", subtitle: Array.from({length: 12 + Math.floor(Math.random() * 8)}, () => "qwertyuiopasdfghjklzxcvbnm1234567890,./;'[]"[Math.floor(Math.random() * 41)]).join(''), isMono: true },
           { title: "Something weird is about to happen.", subtitle: "Just wait." }
         ];
         setRareEventContent(rareEventsList[Math.floor(Math.random() * rareEventsList.length)]);
@@ -279,7 +289,7 @@ export function Experience() {
 
   // Idle timeout
   useEffect(() => {
-    if (step > 1 && step < 11 && !isRareEventActive && !hasSeenRareEvent) {
+    if (step > 1 && step < 10 && !isRareEventActive && !hasSeenRareEvent) {
       const timer = setInterval(() => {
         if (Date.now() - lastInteraction > 45000) { // 45 seconds idle
           setIsRareEventActive(true);
@@ -297,7 +307,7 @@ export function Experience() {
 
   // Final screen event & False Ending logic
   useEffect(() => {
-    if (step === 11) {
+    if (step === 10) {
       window.dispatchEvent(new CustomEvent('cat:final_screen'));
       
       const isRare = Math.random() < 0.0001;
@@ -396,7 +406,7 @@ export function Experience() {
     handleInteraction();
 
     // Random secret room discovery (0.8% chance)
-    if (step > 1 && step < 11 && Math.random() < 0.008) {
+    if (step > 1 && step < 10 && Math.random() < 0.008) {
       const secretRooms = ['/quiet', '/window', '/attic', '/basement', '/rooftop', '/wait', '/radio'];
       const randomRoom = secretRooms[Math.floor(Math.random() * secretRooms.length)];
       if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true');
@@ -423,7 +433,7 @@ export function Experience() {
                 {rareEventContent.title}
               </p>
               {rareEventContent.subtitle && (
-                <p className="text-lg sm:text-xl text-white/50">
+                <p className={`text-lg sm:text-xl text-white/50 ${rareEventContent.isMono ? 'font-mono tracking-widest break-all' : ''}`}>
                   {rareEventContent.subtitle}
                 </p>
               )}
@@ -455,43 +465,7 @@ export function Experience() {
     );
   }
 
-  const renderPathContent = () => {
-    switch (desiredContent) {
-      case 'Something nice':
-        return (
-          <>
-            <p className="text-xl sm:text-2xl text-white/90">You don't have to make tonight productive.</p>
-            <p className="text-lg sm:text-xl text-white/50">You're allowed to have a forgettable day.</p>
-            <p className="text-lg sm:text-xl text-white/50 pt-2">Most evenings don't become memories.</p>
-          </>
-        );
-      case 'Something honest':
-        return (
-          <>
-            <p className="text-xl sm:text-2xl text-white/90">You probably didn't come here because you wanted entertainment.</p>
-            <p className="text-lg sm:text-xl text-white/50">You might just be postponing tomorrow.</p>
-            <p className="text-lg sm:text-xl text-white/50 pt-2">You don't need another recommendation.</p>
-          </>
-        );
-      case 'Something strange':
-        return (
-          <>
-            <p className="text-xl sm:text-2xl text-white/90">Do fish know when it's raining?</p>
-            <p className="text-lg sm:text-xl text-white/50">Would your 12-year-old self trust you?</p>
-            <p className="text-lg sm:text-xl text-white/50 pt-2">The cat has left the interview.</p>
-          </>
-        );
-      case 'Surprise me':
-        return (
-          <>
-            <p className="text-xl sm:text-2xl text-white/90">You have officially spent longer here than we expected.</p>
-            <p className="text-lg sm:text-xl text-white/50">There are no achievements for this.</p>
-          </>
-        );
-      default:
-        return null;
-    }
-  };
+
 
   if (falseEndingActive && falseEndingType) {
     let content: any[] = [];
@@ -522,7 +496,7 @@ export function Experience() {
       if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>before you go.</motion.p>);
       if (falseEndingPhase >= 2) content.push(<motion.p key="2" {...motionProps}>can we ask something?</motion.p>);
     } else if (falseEndingType === 5) {
-      if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>it's quiet tonight.</motion.p>);
+      if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>it's quiet in here.</motion.p>);
     } else if (falseEndingType === 6) {
       if (falseEndingPhase >= 1) content.push(<motion.p key="1" {...motionProps}>the record is still playing.</motion.p>);
     } else if (falseEndingType === 7) {
@@ -578,7 +552,7 @@ export function Experience() {
                 href="/tonight" 
                 className="inline-block text-xs text-white/30 hover:text-white/70 border border-white/10 hover:border-white/30 rounded-full px-4 py-2 tracking-wider font-mono uppercase transition-colors duration-300"
               >
-                Read tonight's logbook
+                Read the logbook
               </a>
             </motion.div>
           )}
@@ -642,7 +616,7 @@ export function Experience() {
                 It's {new Date().toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})} where you are.
               </p>
               <p className="text-base sm:text-lg text-white/50 max-w-sm mx-auto leading-relaxed">
-                That's usually when people start opening random websites.
+                {timeCaption}
               </p>
               <button 
                 onClick={nextStep}
@@ -775,46 +749,10 @@ export function Experience() {
           </ScreenTransition>
         )}
 
-        {/* SCREEN 10: Final Choice */}
+        {/* SCREEN 10: Outro */}
         {step === 10 && (
           <ScreenTransition key="s10" keyId="s10">
-            <div className="space-y-6 sm:space-y-8 px-4 sm:px-0 w-full">
-              <p className="text-sm sm:text-base text-white/50 italic mb-2">The card chose you. Now you choose.</p>
-              <p className="text-2xl sm:text-3xl text-white/90">What do you want to hear?</p>
-              <div className="flex flex-col gap-4 max-w-xs mx-auto w-full">
-                {['Something nice', 'Something honest', 'Something strange', 'Surprise me'].map(choice => (
-                  <button 
-                    key={choice}
-                    onClick={() => {
-                      if (choice === 'Something honest') {
-                        window.dispatchEvent(new CustomEvent('cat:honest_choice'));
-                      }
-                      if (choice === 'Something strange') {
-                        window.dispatchEvent(new CustomEvent('cat:strange_choice'));
-                      }
-                      handleInteraction('desired_content', choice);
-                      setDesiredContent(choice);
-                      nextStep();
-                    }}
-                    className="w-full px-4 sm:px-6 py-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-white/70 hover:text-white/90 text-sm sm:text-base"
-                  >
-                    {choice}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </ScreenTransition>
-        )}
-
-        {/* SCREEN 11: Outro */}
-        {step === 11 && (
-          <ScreenTransition key="s11" keyId="s11">
-            <div className="space-y-8 sm:space-y-12 px-4 sm:px-0 w-full">
-              <div className="space-y-3 sm:space-y-4">
-                {renderPathContent()}
-              </div>
-              
-              <div className="h-[1px] w-12 bg-white/10 mx-auto" />
+            <div className="space-y-8 sm:space-y-12 px-4 sm:px-0 w-full text-center">
 
               <div className="space-y-4 sm:space-y-6">
                 <p className="text-xs sm:text-sm text-white/40 uppercase tracking-widest">Maybe try one of these</p>
@@ -845,7 +783,7 @@ export function Experience() {
                   href="/tonight" 
                   className="mt-2 text-xs text-white border border-white/10 rounded-full px-4 py-2 tracking-wider font-mono uppercase"
                 >
-                  Read tonight's logbook
+                  Read the logbook
                 </motion.a>
               </div>
             </div>

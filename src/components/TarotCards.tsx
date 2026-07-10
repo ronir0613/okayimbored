@@ -1,17 +1,32 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const TAROT_OBSERVATIONS = [
+  ["...", "You can just leave it there."],
+  ["...", "I thought we removed this card from the deck."],
+  ["...", "Well.", "That doesn't help at all."],
+  ["...", "It reminds me of something.", "I can't remember what."],
+  ["...", "Some things don't mean anything.", "And that's fine."],
+  ["...", "Did you expect something else?"],
+  ["...", "We can just leave it at that."],
+  ["...", "A completely average draw."],
+  ["...", "You don't have to figure it out right now."],
+  ["...", "There isn't a hidden message here."],
+  ["...", "It is exactly what it looks like."],
+  ["...", "This one has a bit of dust on it."]
+];
+
 const ALL_CARDS = [
-  { title: "THE CHAIR", description: "This card appeared\n{count} times tonight." },
-  { title: "THE WINDOW", description: "Nobody picked this\nfor 37 minutes." }, // Static for now as requested by user example
-  { title: "THE DOG", description: "The dog approves." },
-  { title: "THE CAT", description: "The cat selected this earlier." },
-  { title: "THE BUTTON", description: "There was supposed\nto be a button here." },
-  { title: "THE TUESDAY", description: "This doesn't feel\nlike a Tuesday card." },
-  { title: "THE MAP", description: "Three people from your country\npicked this tonight." },
-  { title: "THE NOTHING", description: "This card contains\nalmost nothing." },
-  { title: "THE WAITING ROOM", description: "This card was waiting\nfor somebody." },
-  { title: "THE DESKTOP", description: "You probably have\ntoo many tabs open." }
+  { title: "THE CHAIR", description: "Someone was sitting here\njust a moment ago." },
+  { title: "THE WINDOW", description: "{count} people have looked\nout of this window." },
+  { title: "THE DOG", description: "Happy to just be\nin the same room." },
+  { title: "THE CAT", description: "It walks away before\nyou can ask a question." },
+  { title: "THE BUTTON", description: "A small, satisfying click\nthat changes nothing." },
+  { title: "THE TUESDAY", description: "You probably don't remember\nwhat happened last Tuesday." },
+  { title: "THE MAP", description: "There is a place you haven't\nthought about in years." },
+  { title: "THE NOTHING", description: "A comfortable silence.\nNo need to fill it." },
+  { title: "THE WAITING ROOM", description: "The magazines on the table\nare five years old." },
+  { title: "THE DESKTOP", description: "Folders within folders,\ngathering digital dust." }
 ];
 
 export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, sessionId?: string }) {
@@ -19,6 +34,7 @@ export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, 
   const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
   const [cardStats, setCardStats] = useState<number | null>(null);
+  const [observation, setObservation] = useState<string[]>([]);
 
   useEffect(() => {
     // Pick 3 random unique cards
@@ -31,6 +47,7 @@ export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, 
     setSelectedCardIdx(idx);
     
     const pickedCard = cards[idx];
+    setObservation(TAROT_OBSERVATIONS[Math.floor(Math.random() * TAROT_OBSERVATIONS.length)]);
 
     // Fire API call in background
     if (sessionId) {
@@ -169,7 +186,7 @@ export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="mt-8 sm:mt-24"
+            className="mt-8 sm:mt-24 h-24"
           >
             <p className="text-xs sm:text-sm text-white/30 uppercase tracking-widest">
               there is no wrong choice.
@@ -177,20 +194,42 @@ export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, 
           </motion.div>
         ) : isRevealed ? (
           <motion.div
-            key="continue-btn"
+            key="observation-container"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 2, duration: 1 }} // Wait a bit for them to read
-            className="mt-8 sm:mt-24"
+            className="mt-8 sm:mt-16 flex flex-col items-center gap-4 h-32"
           >
-            <button 
-              onClick={onComplete}
-              className="text-xs sm:text-sm text-white/30 hover:text-white/60 transition-colors uppercase tracking-widest"
+            <div className="flex flex-col items-center gap-2">
+              {observation.map((line, i) => (
+                <motion.p
+                  key={i}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 + i * 2.5, duration: 1.5 }}
+                  className="text-base sm:text-lg text-white/70 italic text-center"
+                >
+                  {line}
+                </motion.p>
+              ))}
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 + observation.length * 2.5, duration: 1 }}
+              className="mt-4"
             >
-              Continue
-            </button>
+              <button 
+                onClick={onComplete}
+                className="text-xs sm:text-sm text-white/30 hover:text-white/60 transition-colors uppercase tracking-widest"
+              >
+                Continue
+              </button>
+            </motion.div>
           </motion.div>
-        ) : null}
+        ) : (
+          <motion.div key="spacer" className="mt-8 sm:mt-24 h-24" />
+        )}
       </AnimatePresence>
     </div>
   );
