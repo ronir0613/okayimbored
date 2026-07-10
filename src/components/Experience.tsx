@@ -11,8 +11,12 @@ export function Experience() {
   const [step, setStep] = useState(1);
   const [desiredContent, setDesiredContent] = useState<string>('');
   
-  // Conversational questions state
-  const [qStep, setQStep] = useState(0);
+  // Conversational questions state (V26)
+  const [opening, setOpening] = useState<{text: string, options: string[]} | null>(null);
+  const [statisticTemplate, setStatisticTemplate] = useState<string>('');
+  const [selectedQuestions, setSelectedQuestions] = useState<{text: string, options: {text: string, reaction: string}[]}[]>([]);
+  const [reactions, setReactions] = useState<string[]>([]);
+  const [breathingSpace, setBreathingSpace] = useState<string>('');
 
   // Rare events state
   const [isRareEventActive, setIsRareEventActive] = useState(false);
@@ -46,12 +50,16 @@ export function Experience() {
           if (saved) {
             const parsed = JSON.parse(saved);
             if (typeof parsed.step === 'number') setStep(parsed.step);
-            if (typeof parsed.qStep === 'number') setQStep(parsed.qStep);
             if (parsed.desiredContent !== undefined) setDesiredContent(parsed.desiredContent);
             if (parsed.falseEndingActive !== undefined) setFalseEndingActive(parsed.falseEndingActive);
             if (parsed.falseEndingPhase !== undefined) setFalseEndingPhase(parsed.falseEndingPhase);
             if (parsed.falseEndingType !== undefined) setFalseEndingType(parsed.falseEndingType);
             if (parsed.falseEndingChoice !== undefined) setFalseEndingChoice(parsed.falseEndingChoice);
+            if (parsed.opening) setOpening(parsed.opening);
+            if (parsed.statisticTemplate) setStatisticTemplate(parsed.statisticTemplate);
+            if (parsed.selectedQuestions) setSelectedQuestions(parsed.selectedQuestions);
+            if (parsed.reactions) setReactions(parsed.reactions);
+            if (parsed.breathingSpace) setBreathingSpace(parsed.breathingSpace);
           }
         } catch (e) {
           console.error('Failed to restore state', e);
@@ -65,16 +73,132 @@ export function Experience() {
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.setItem('okayimbored_state', JSON.stringify({
         step,
-        qStep,
         desiredContent,
         falseEndingActive,
         falseEndingPhase,
         falseEndingType,
-        falseEndingChoice
+        falseEndingChoice,
+        opening,
+        statisticTemplate,
+        selectedQuestions,
+        reactions,
+        breathingSpace
       }));
     }
-  }, [step, qStep, desiredContent, falseEndingActive, falseEndingPhase, falseEndingType, falseEndingChoice]);
+  }, [step, desiredContent, falseEndingActive, falseEndingPhase, falseEndingType, falseEndingChoice, opening, statisticTemplate, selectedQuestions, reactions, breathingSpace]);
   // --- V12 STATE PRESERVATION END ---
+
+  // --- V26 CONVERSATION SETUP START ---
+  useEffect(() => {
+    if (typeof sessionStorage !== 'undefined') {
+      const isReturning = sessionStorage.getItem('okayimbored_returning_from_secret') === 'true';
+      const hasSavedState = !!sessionStorage.getItem('okayimbored_state');
+      if (isReturning && hasSavedState) {
+        return; // Don't re-roll if we are restoring state
+      }
+    }
+
+    const openings = [
+      { text: "Are you bored?", options: ["Yes.", "No.", "Sort of."] },
+      { text: "Still awake?", options: ["Unfortunately.", "Very much.", "Barely."] },
+      { text: "Couldn't sleep?", options: ["No.", "Trying to.", "Just woke up."] },
+      { text: "Taking a break?", options: ["Yes.", "Not really.", "From everything."] },
+      { text: "Avoiding something?", options: ["Maybe.", "Yes.", "No."] },
+      { text: "Just passing through?", options: ["Yes.", "Probably.", "We'll see."] },
+      { text: "Need a minute?", options: ["Yes.", "Take your time.", "I have plenty."] },
+      { text: "Looking for something?", options: ["Yes.", "No.", "Not sure."] },
+      { text: "You found us.", options: ["I did.", "Where is this?", "By accident."] },
+      { text: "Hello.", options: ["Hi.", "Hey.", "..."] },
+      { text: "Come in.", options: ["Okay.", "Thanks.", "..."] },
+      { text: "Well... you're here.", options: ["I am.", "True.", "..."] },
+      { text: "One minute?", options: ["Sure.", "Okay.", "Make it quick."] },
+      { text: "Let's start somewhere simple.", options: ["Okay.", "Go ahead.", "..."] }
+    ];
+
+    const statsTemplates = [
+      "{boredPercentage}% of visitors tonight said they were procrastinating.",
+      "{boredPercentage}% chose comfort.",
+      "Most visitors arrived after 10 PM.",
+      "{activeVisitors} people are still wandering around tonight.",
+      "{boredPercentage}% said they stayed longer than they expected."
+    ];
+
+    const questionsPool = [
+      {
+        text: "How's your energy right now?",
+        options: [
+          { text: "Wide awake.", reaction: "Good." },
+          { text: "Running on fumes.", reaction: "I had a feeling." },
+          { text: "Somewhere in between.", reaction: "Fair enough." }
+        ]
+      },
+      {
+        text: "What sounds good right now?",
+        options: [
+          { text: "Music.", reaction: "I'll turn it up." },
+          { text: "Silence.", reaction: "Understood." },
+          { text: "Rain.", reaction: "Good choice." }
+        ]
+      },
+      {
+        text: "How did you end up here?",
+        options: [
+          { text: "By accident.", reaction: "Happy accidents." },
+          { text: "Someone sent me.", reaction: "Tell them hello." },
+          { text: "No idea.", reaction: "That's a surprisingly common answer." }
+        ]
+      },
+      {
+        text: "If tonight had a soundtrack...",
+        options: [
+          { text: "Quiet.", reaction: "Nice." },
+          { text: "Loud.", reaction: "Bold." },
+          { text: "Static.", reaction: "Comforting." }
+        ]
+      },
+      {
+        text: "What's been on your mind today?",
+        options: [
+          { text: "Too much.", reaction: "Let it go for a minute." },
+          { text: "Nothing really.", reaction: "Lucky you." },
+          { text: "I'd rather not say.", reaction: "That's fine." }
+        ]
+      },
+      {
+        text: "How long do you think you'll stay?",
+        options: [
+          { text: "About a minute.", reaction: "We'll be quick." },
+          { text: "Longer than planned.", reaction: "Take your time." },
+          { text: "No idea.", reaction: "Fair enough." }
+        ]
+      },
+      {
+        text: "Have you looked outside recently?",
+        options: [
+          { text: "Yes.", reaction: "Good." },
+          { text: "No.", reaction: "Maybe you should." },
+          { text: "There are no windows.", reaction: "Ah." }
+        ]
+      }
+    ];
+
+    const spaces = [
+      "The cat disagrees.",
+      "...",
+      "Anyway.",
+      "The record is still spinning.",
+      "We almost forgot what we were asking.",
+      "The cat walked across the keyboard again."
+    ];
+
+    setOpening(openings[Math.floor(Math.random() * openings.length)]);
+    setStatisticTemplate(statsTemplates[Math.floor(Math.random() * statsTemplates.length)]);
+    setBreathingSpace(spaces[Math.floor(Math.random() * spaces.length)]);
+    
+    const shuffledQs = [...questionsPool].sort(() => 0.5 - Math.random());
+    setSelectedQuestions(shuffledQs.slice(0, 3));
+  }, []);
+  // --- V26 CONVERSATION SETUP END ---
 
   // 1. Initial rare event check
   useEffect(() => {
@@ -155,7 +279,7 @@ export function Experience() {
 
   // Idle timeout
   useEffect(() => {
-    if (step > 1 && step < 8 && !isRareEventActive && !hasSeenRareEvent) {
+    if (step > 1 && step < 11 && !isRareEventActive && !hasSeenRareEvent) {
       const timer = setInterval(() => {
         if (Date.now() - lastInteraction > 45000) { // 45 seconds idle
           setIsRareEventActive(true);
@@ -173,7 +297,7 @@ export function Experience() {
 
   // Final screen event & False Ending logic
   useEffect(() => {
-    if (step === 8) {
+    if (step === 11) {
       window.dispatchEvent(new CustomEvent('cat:final_screen'));
       
       const isRare = Math.random() < 0.0001;
@@ -272,7 +396,7 @@ export function Experience() {
     handleInteraction();
 
     // Random secret room discovery (0.8% chance)
-    if (step > 1 && step < 8 && Math.random() < 0.008) {
+    if (step > 1 && step < 11 && Math.random() < 0.008) {
       const secretRooms = ['/quiet', '/window', '/attic', '/basement', '/rooftop', '/wait', '/radio'];
       const randomRoom = secretRooms[Math.floor(Math.random() * secretRooms.length)];
       if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true');
@@ -281,7 +405,7 @@ export function Experience() {
     }
 
     // Occasional internet archaeology interruption (5% chance)
-    if (step > 1 && step < 7 && !isRareEventActive && !isArchaeologyActive && Math.random() < 0.05) {
+    if (step > 1 && step < 9 && !isRareEventActive && !isArchaeologyActive && Math.random() < 0.05) {
       setArchaeologyContent(getRandomArtifact());
       setIsArchaeologyActive(true);
     }
@@ -470,47 +594,35 @@ export function Experience() {
     >
       <AnimatePresence mode="wait">
         
-        {/* SCREEN 1 */}
-        {step === 1 && (
+        {/* SCREEN 1: Opening */}
+        {step === 1 && opening && (
           <ScreenTransition key="s1" keyId="s1">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight mb-8 sm:mb-12 text-white/90">
-              Are you bored?
+              {opening.text}
             </h1>
-            <div className="flex gap-4 sm:gap-6 justify-center">
-              <button 
-                onClick={() => {
-                  handleInteraction('are_you_bored', 'Yes');
-                  nextStep();
-                }}
-                className="px-6 py-2 rounded-full hover:bg-white/5 transition-all duration-300 text-white/70 hover:text-white"
-              >
-                Yes
-              </button>
-              <button 
-                onClick={() => {
-                  handleInteraction('are_you_bored', 'No');
-                  nextStep();
-                }}
-                className="px-6 py-2 rounded-full hover:bg-white/5 transition-all duration-300 text-white/70 hover:text-white"
-              >
-                No
-              </button>
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center">
+              {opening.options.map(opt => (
+                <button 
+                  key={opt}
+                  onClick={() => {
+                    handleInteraction('opening', opt);
+                    nextStep();
+                  }}
+                  className="px-6 py-3 sm:py-2 rounded-full hover:bg-white/5 transition-all duration-300 text-white/70 hover:text-white"
+                >
+                  {opt}
+                </button>
+              ))}
             </div>
           </ScreenTransition>
         )}
 
-        {/* SCREEN 2 */}
+        {/* SCREEN 2: Statistic */}
         {step === 2 && (
           <ScreenTransition key="s2" keyId="s2">
             <div id="statistics-content" className="space-y-6 sm:space-y-8 px-4 sm:px-0">
               <p className="text-lg sm:text-xl md:text-2xl text-white/80 font-medium italic">
-                {stats.boredPercentage}% of visitors tonight said they were bored.
-              </p>
-              <p className="text-lg sm:text-xl md:text-2xl text-white/80 font-medium italic pt-2">
-                {100 - stats.boredPercentage}% claimed they were "just checking something."
-              </p>
-              <p className="text-base sm:text-lg text-white/50 max-w-sm mx-auto leading-relaxed">
-                We don't believe them.
+                {statisticTemplate.replace('{boredPercentage}', String(stats.boredPercentage)).replace('{activeVisitors}', String(stats.activeVisitors))}
               </p>
               <button 
                 onClick={nextStep}
@@ -522,15 +634,15 @@ export function Experience() {
           </ScreenTransition>
         )}
 
-        {/* SCREEN 3 */}
+        {/* SCREEN 3: Observation */}
         {step === 3 && (
           <ScreenTransition key="s3" keyId="s3">
             <div className="space-y-6 sm:space-y-8 px-4 sm:px-0">
               <p className="text-lg sm:text-xl md:text-2xl text-white/80 font-medium">
-                Cats ignore approximately 93% of human requests.
+                It's {new Date().toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})} where you are.
               </p>
               <p className="text-base sm:text-lg text-white/50 max-w-sm mx-auto leading-relaxed">
-                Nobody has ever asked the website if it's bored.
+                That's usually when people start opening random websites.
               </p>
               <button 
                 onClick={nextStep}
@@ -542,77 +654,83 @@ export function Experience() {
           </ScreenTransition>
         )}
 
-        {/* SCREEN 4: The Interview */}
-        {step === 4 && (
-          <ScreenTransition key={`s4-q${qStep}`} keyId={`s4-q${qStep}`}>
+        {/* SCREEN 4: Question 1 */}
+        {step === 4 && selectedQuestions.length > 0 && (
+          <ScreenTransition key="s4" keyId="s4">
             <div className="space-y-6 sm:space-y-8 px-4 sm:px-0 w-full">
-              {qStep === 0 && (
-                <>
-                  <p className="text-xl sm:text-2xl text-white/90">What time is it for you?</p>
-                  <div className="flex flex-col gap-3 max-w-xs mx-auto w-full">
-                    {['Late at night', 'Middle of the day', 'Early morning'].map(t => (
-                      <button 
-                        key={t}
-                        onClick={() => {
-                          handleInteraction('time_of_day', t);
-                          setQStep(1);
-                        }}
-                        className="w-full px-4 sm:px-6 py-3 rounded-xl hover:bg-white/5 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-              {qStep === 1 && (
-                <>
-                  <p className="text-xl sm:text-2xl text-white/90">Are you alone right now?</p>
-                  <div className="flex flex-col gap-3 max-w-xs mx-auto w-full">
-                    {['Yes', 'No', 'Sort of'].map(t => (
-                      <button 
-                        key={t}
-                        onClick={() => {
-                          handleInteraction('alone', t);
-                          setQStep(2);
-                        }}
-                        className="w-full px-4 sm:px-6 py-3 rounded-xl hover:bg-white/5 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-              {qStep === 2 && (
-                <>
-                  <p className="text-xl sm:text-2xl text-white/90">Are you looking for comfort or distraction?</p>
-                  <div className="flex flex-col gap-3 max-w-xs mx-auto w-full">
-                    {['Comfort', 'Distraction', 'I don\'t know'].map(t => (
-                      <button 
-                        key={t}
-                        onClick={() => {
-                          handleInteraction('seeking', t);
-                          nextStep();
-                        }}
-                        className="w-full px-4 sm:px-6 py-3 rounded-xl hover:bg-white/5 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
+              <p className="text-xl sm:text-2xl text-white/90">{selectedQuestions[0].text}</p>
+              <div className="flex flex-col gap-3 max-w-xs mx-auto w-full">
+                {selectedQuestions[0].options.map(opt => (
+                  <button 
+                    key={opt.text}
+                    onClick={() => {
+                      setReactions(prev => { const n = [...prev]; n[0] = opt.reaction; return n; });
+                      handleInteraction('q1', opt.text);
+                      nextStep();
+                    }}
+                    className="w-full px-4 sm:px-6 py-3 rounded-xl hover:bg-white/5 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
+                  >
+                    {opt.text}
+                  </button>
+                ))}
+              </div>
             </div>
           </ScreenTransition>
         )}
 
-        {/* SCREEN 5 */}
+        {/* SCREEN 5: Reaction 1 */}
         {step === 5 && (
           <ScreenTransition key="s5" keyId="s5">
+            <div className="space-y-6 sm:space-y-12 px-4 sm:px-0">
+              <p className="text-xl sm:text-2xl text-white/90 italic">
+                {reactions[0]}
+              </p>
+              <p className="text-base sm:text-lg text-white/50 pt-4">
+                {breathingSpace}
+              </p>
+              <button 
+                onClick={nextStep}
+                className="mt-6 sm:mt-8 text-xs sm:text-sm text-white/30 hover:text-white/60 transition-colors uppercase tracking-widest block mx-auto"
+              >
+                Continue
+              </button>
+            </div>
+          </ScreenTransition>
+        )}
+
+        {/* SCREEN 6: Question 2 */}
+        {step === 6 && selectedQuestions.length > 1 && (
+          <ScreenTransition key="s6" keyId="s6">
+            <div className="space-y-6 sm:space-y-8 px-4 sm:px-0 w-full">
+              <p className="text-xl sm:text-2xl text-white/90">{selectedQuestions[1].text}</p>
+              <div className="flex flex-col gap-3 max-w-xs mx-auto w-full">
+                {selectedQuestions[1].options.map(opt => (
+                  <button 
+                    key={opt.text}
+                    onClick={() => {
+                      setReactions(prev => { const n = [...prev]; n[1] = opt.reaction; return n; });
+                      handleInteraction('q2', opt.text);
+                      nextStep();
+                    }}
+                    className="w-full px-4 sm:px-6 py-3 rounded-xl hover:bg-white/5 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
+                  >
+                    {opt.text}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </ScreenTransition>
+        )}
+
+        {/* SCREEN 7: Reaction 2 + Cat */}
+        {step === 7 && (
+          <ScreenTransition key="s7" keyId="s7">
             <div className="space-y-6 px-4 sm:px-0">
               <p className="text-xl sm:text-2xl text-white/90 italic">
-                The cat believes this interview has become too personal.
+                {reactions[1]}
+              </p>
+              <p className="text-base sm:text-lg text-white/50 pt-4 max-w-sm mx-auto">
+                The cat believes this conversation has become too personal.
               </p>
               <div className="pt-4 flex justify-center">
                 <button 
@@ -627,16 +745,39 @@ export function Experience() {
           </ScreenTransition>
         )}
 
-        {/* SCREEN 6: Tarot Cards */}
-        {step === 6 && (
-          <ScreenTransition key="s6-cards" keyId="s6-cards">
+        {/* SCREEN 8: Question 3 */}
+        {step === 8 && selectedQuestions.length > 2 && (
+          <ScreenTransition key="s8" keyId="s8">
+            <div className="space-y-6 sm:space-y-8 px-4 sm:px-0 w-full">
+              <p className="text-xl sm:text-2xl text-white/90">{selectedQuestions[2].text}</p>
+              <div className="flex flex-col gap-3 max-w-xs mx-auto w-full">
+                {selectedQuestions[2].options.map(opt => (
+                  <button 
+                    key={opt.text}
+                    onClick={() => {
+                      handleInteraction('q3', opt.text);
+                      nextStep();
+                    }}
+                    className="w-full px-4 sm:px-6 py-3 rounded-xl hover:bg-white/5 transition-all text-white/60 hover:text-white/90 text-sm sm:text-base"
+                  >
+                    {opt.text}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </ScreenTransition>
+        )}
+
+        {/* SCREEN 9: Tarot Cards */}
+        {step === 9 && (
+          <ScreenTransition key="s9-cards" keyId="s9-cards">
             <TarotCards onComplete={nextStep} sessionId={sessionId} />
           </ScreenTransition>
         )}
 
-        {/* SCREEN 7 */}
-        {step === 7 && (
-          <ScreenTransition key="s7" keyId="s7">
+        {/* SCREEN 10: Final Choice */}
+        {step === 10 && (
+          <ScreenTransition key="s10" keyId="s10">
             <div className="space-y-6 sm:space-y-8 px-4 sm:px-0 w-full">
               <p className="text-sm sm:text-base text-white/50 italic mb-2">The card chose you. Now you choose.</p>
               <p className="text-2xl sm:text-3xl text-white/90">What do you want to hear?</p>
@@ -665,9 +806,9 @@ export function Experience() {
           </ScreenTransition>
         )}
 
-        {/* SCREEN 8 & OUTRO */}
-        {step === 8 && (
-          <ScreenTransition key="s8" keyId="s8">
+        {/* SCREEN 11: Outro */}
+        {step === 11 && (
+          <ScreenTransition key="s11" keyId="s11">
             <div className="space-y-8 sm:space-y-12 px-4 sm:px-0 w-full">
               <div className="space-y-3 sm:space-y-4">
                 {renderPathContent()}

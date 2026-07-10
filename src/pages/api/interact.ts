@@ -18,7 +18,7 @@ export const POST: APIRoute = async ({ request }) => {
     // Pick a random interesting trace that isn't the current user
     let interestingTrace = null;
     if (traces.length > 0 && Math.random() > 0.7) {
-      const trace = traces[Math.floor(Math.random() * traces.length)];
+      const trace = traces[Math.floor(Math.random() * traces.length)] as any;
       if (trace.sessions && trace.sessions.country_code) {
         const timeAgo = Math.max(1, Math.floor((Date.now() - new Date(trace.created_at).getTime()) / 60000));
         interestingTrace = `Someone in ${trace.sessions.country_code} chose '${trace.value}' ${timeAgo} minutes ago.`;

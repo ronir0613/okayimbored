@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { db } from '../../lib/supabase';
 
-export const POST: APIRoute = async ({ request, clientAddress }) => {
+export const POST: APIRoute = async ({ request }) => {
   try {
     // Get country from Vercel/Cloudflare headers, fallback to Unknown
     const country = request.headers.get('x-vercel-ip-country') || 
