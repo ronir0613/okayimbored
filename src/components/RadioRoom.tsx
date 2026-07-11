@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { addEcho, hasEcho } from '../lib/echoes';
 
 const CHANNELS = [
   { freq: 87.7, name: 'Late Night Radio' },
@@ -85,8 +86,9 @@ export const RadioRoom: React.FC = () => {
   const currentChannel = CHANNELS[frequencyIndex];
   const broadcastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Clock
+  // Clock & Echo
   useEffect(() => {
+    addEcho('visited_radio');
     const updateTime = () => {
       const now = new Date();
       setTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
@@ -159,7 +161,15 @@ export const RadioRoom: React.FC = () => {
       if (Math.random() < 0.15) {
         setBroadcast(ANNOUNCEMENTS[Math.floor(Math.random() * ANNOUNCEMENTS.length)]);
       } else {
-        const messages = BROADCASTS[currentChannel.freq];
+        const messages = [...(BROADCASTS[currentChannel.freq] || [])];
+        
+        if (currentChannel.freq === 87.7 && hasEcho('answered_telephone')) {
+          messages.push("conversations never really end.");
+        }
+        if (currentChannel.freq === 91.3 && hasEcho('tarot_the_moon')) {
+          messages.push("the moon looks different tonight.");
+        }
+        
         if (messages && messages.length > 0) {
           setBroadcast(messages[Math.floor(Math.random() * messages.length)]);
         } else {

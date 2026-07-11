@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PixelCat, type CatState } from './LivingCats/PixelCat';
 import { motion, AnimatePresence } from 'framer-motion';
+import { addEcho, hasEcho } from '../lib/echoes';
 
 type RoomState = 'IDLE' | 'RINGING' | 'ANSWERED' | 'MISSED';
 
@@ -57,6 +58,7 @@ export default function TelephoneRoom() {
         // If not answered in 20s, miss the call
         missedTimeoutRef.current = setTimeout(() => {
           setRoomState('MISSED');
+          addEcho('ignored_telephone');
         }, 20000);
       }, delay);
     }
@@ -90,6 +92,8 @@ export default function TelephoneRoom() {
       dialogue = ['...', '"the record player\nis doing better."', 'Click.'];
     } else if (rCall < 0.0061) {
       dialogue = ['...', '"the Lost & Found\nfound something."', 'Click.'];
+    } else if (hasEcho('visited_radio') && rCall < 0.3) {
+      dialogue = ['...', '(faint radio static)', '"we were checking\nif anyone was still here."', 'Click.'];
     } else {
       dialogue = STANDARD_CALLS[Math.floor(Math.random() * STANDARD_CALLS.length)];
     }
@@ -97,6 +101,7 @@ export default function TelephoneRoom() {
     setCallDialogue(dialogue);
     setCurrentLineIdx(0);
     setRoomState('ANSWERED');
+    addEcho('answered_telephone');
   };
 
   if (!mounted) return null;

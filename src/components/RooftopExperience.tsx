@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PixelCat } from './LivingCats/PixelCat';
+import { addEcho, hasEcho } from '../lib/echoes';
+import { useExperienceStore } from '../lib/store';
 
 const MICROCOPY = [
   "good view.",
@@ -138,6 +140,8 @@ export default function RooftopExperience() {
     };
     
     updateSky();
+    addEcho('visited_rooftop');
+    useExperienceStore.getState().incrementCuriosity();
     const interval = setInterval(updateSky, 60000);
     return () => clearInterval(interval);
   }, []);
@@ -247,8 +251,9 @@ export default function RooftopExperience() {
     const tick = () => {
       const roll = Math.random() * 100;
       
-      // Shooting star (1%)
-      if (roll < 1.0 && !shootingStarRef.current) {
+      // Shooting star (1% or 3% with The Star echo)
+      const starChance = hasEcho('tarot_the_star') ? 3.0 : 1.0;
+      if (roll < starChance && !shootingStarRef.current) {
         shootingStarRef.current = {
           x: Math.random() * (window.innerWidth / 2),
           y: Math.random() * (window.innerHeight / 3),
@@ -270,6 +275,8 @@ export default function RooftopExperience() {
         // Small chance for a very specific caption
         if (Math.random() < 0.1) {
           setCurrentMicrocopy("you picked a good night.");
+        } else if (hasEcho('visited_window') && Math.random() < 0.3) {
+          setCurrentMicrocopy("a natural continuation.");
         } else {
           const quote = MICROCOPY[Math.floor(Math.random() * MICROCOPY.length)];
           setCurrentMicrocopy(quote);

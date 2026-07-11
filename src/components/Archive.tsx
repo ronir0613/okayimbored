@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { PixelCat } from './LivingCats/PixelCat';
+import { addEcho, hasEcho } from '../lib/echoes';
+import { useExperienceStore } from '../lib/store';
 
 const RETIRED_OBSERVATIONS = [
   { text: '"You don\'t sound bored.\nYou sound homesick."', sub: 'Used: 312 times\nRetired: September 2026' },
@@ -65,6 +67,8 @@ export default function Archive() {
 
   useEffect(() => {
     setMounted(true);
+    addEcho('visited_archive');
+    useExperienceStore.getState().incrementCuriosity();
     const r = Math.random();
     
     // 0.01% Super Rare
@@ -264,7 +268,16 @@ export default function Archive() {
             Section 6 / Website Memories
           </div>
           <div className="flex flex-col gap-10">
-            {MEMORIES.map((mem, i) => (
+            {useMemo(() => {
+              const mems = [...MEMORIES];
+              if (hasEcho('visited_basement')) {
+                mems.unshift('"Someone left tiny paw prints."');
+              }
+              if (hasEcho('tarot_the_hermit')) {
+                mems.unshift('"We found someone hiding."');
+              }
+              return mems;
+            }, []).map((mem, i) => (
               <div key={i} className="text-xs text-white/40 italic leading-relaxed font-serif relative pl-4 border-l-[0.5px] border-white/10">
                 {mem}
               </div>

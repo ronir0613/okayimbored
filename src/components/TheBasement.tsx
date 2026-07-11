@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PixelCat } from './LivingCats/PixelCat';
+import { addEcho, hasEcho } from '../lib/echoes';
+import { useExperienceStore } from '../lib/store';
 
 const BOX_LABELS = [
   'Maybe Later',
@@ -186,7 +188,18 @@ export default function TheBasement() {
   const boxes = useRandomElements(BOX_LABELS, 6);
   const objects = useRandomElements(OBJECT_LABELS, 4);
   const shelves = useRandomElements(SHELF_ITEMS, 5);
-  const wallNote = useRandomElements(WALL_NOTES, 1)[0];
+  
+  const dynamicWallNotes = useMemo(() => {
+    const notes = [...WALL_NOTES];
+    if (hasEcho('answered_telephone')) {
+      notes.push('The lines are disconnected.');
+    }
+    if (hasEcho('tarot_the_hermit')) {
+      notes.push('Someone was looking for this.');
+    }
+    return notes;
+  }, []);
+  const wallNote = useRandomElements(dynamicWallNotes, 1)[0];
 
   // Random Cats
   const [catPositions, setCatPositions] = useState<{id: number, type: string, top: string, left: string}[]>([]);
@@ -195,6 +208,9 @@ export default function TheBasement() {
 
   useEffect(() => {
     setMounted(true);
+    addEcho('visited_basement');
+    useExperienceStore.getState().incrementCuriosity();
+    
     const interval = setInterval(() => {
       const now = new Date();
       setTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
@@ -202,13 +218,16 @@ export default function TheBasement() {
 
     // Initial cats
     const cats = [];
+    const eyesChance = hasEcho('tarot_the_moon') ? 0.45 : 0.3;
+    const walkingChance = hasEcho('tarot_the_fool') ? 0.35 : 0.2;
+    
     if (Math.random() < 0.4) {
       cats.push({ id: 1, type: 'sleeping', top: '75%', left: '10%' });
     }
-    if (Math.random() < 0.3) {
+    if (Math.random() < eyesChance) {
       cats.push({ id: 2, type: 'eyes', top: '30%', left: '80%' });
     }
-    if (Math.random() < 0.2) {
+    if (Math.random() < walkingChance) {
       cats.push({ id: 3, type: 'walking', top: '15%', left: '60%' }); // Walking behind shelf
     }
     setCatPositions(cats);
@@ -223,8 +242,10 @@ export default function TheBasement() {
     const rareEventLoop = setInterval(() => {
       const r = Math.random();
       
-      // 0.5% Light goes out for 5s
-      if (r < 0.005 && !isDark) {
+      const lightsOutChance = hasEcho('tarot_the_tower') ? 0.015 : 0.005;
+      
+      // Light goes out for 5s
+      if (r < lightsOutChance && !isDark) {
         setIsDark(true);
         setTimeout(() => setIsDark(false), 5000);
       }

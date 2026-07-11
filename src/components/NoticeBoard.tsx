@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PixelCat, type CatState } from './LivingCats/PixelCat';
+import { addEcho, hasEcho } from '../lib/echoes';
 
 const GENERAL_NOTICES = [
   "The hallway light has been fixed.",
@@ -110,6 +111,7 @@ export default function NoticeBoard() {
 
   useEffect(() => {
     setMounted(true);
+    addEcho('visited_notices');
 
     const r = Math.random();
     
@@ -129,9 +131,14 @@ export default function NoticeBoard() {
       const generated: NoteData[] = [];
       const numNotes = Math.floor(Math.random() * 8) + 12; // 12 to 19 notes
       
+      const dynamicCatNotices = [...CAT_NOTICES];
+      if (hasEcho('saw_cat_intervention') || hasEcho('tarot_the_fool')) {
+        dynamicCatNotices.push("Looking for a small,\nuncooperative cat.\n\nPlease return if found.");
+      }
+
       const allPools = [
         { pool: GENERAL_NOTICES, type: 'General' },
-        { pool: CAT_NOTICES, type: 'Cat' },
+        { pool: dynamicCatNotices, type: 'Cat' },
         { pool: LOST_FOUND, type: 'Lost & Found' },
         { pool: COMMUNITY_NOTES, type: 'Community' },
         { pool: STRANGE_NOTICES, type: 'Strange' },

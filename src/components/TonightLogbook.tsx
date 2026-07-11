@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { getEchoes } from '../lib/echoes';
 
 type TonightData = {
   observations: string[];
@@ -23,6 +24,47 @@ export default function TonightLogbook() {
         const filteredObservations = d.observations.filter((obs: string) => 
           !/cat|sleeper|wanderer/i.test(obs)
         );
+        
+        const echoes = getEchoes();
+        if (echoes.includes('started_journey') && !echoes.includes('finished_interview')) {
+          // just a small touch
+        }
+        if (echoes.includes('visited_rooftop')) {
+          filteredObservations.push("You spent some time looking out.");
+        }
+        if (echoes.includes('visited_basement')) {
+          filteredObservations.push("You wandered somewhere quiet.");
+        }
+        if (echoes.includes('tarot_the_moon')) {
+          filteredObservations.push("The night felt a little longer.");
+        }
+        if (echoes.includes('tarot_the_star')) {
+          filteredObservations.push("You kept looking for something bright.");
+        }
+        if (echoes.includes('tarot_the_tower')) {
+          filteredObservations.push("Everything felt a bit unsteady.");
+        }
+        if (echoes.includes('tarot_the_hermit')) {
+          filteredObservations.push("You seemed to prefer the quiet.");
+        }
+        if (echoes.includes('tarot_the_fool')) {
+          filteredObservations.push("You didn't seem to mind being lost.");
+        }
+        if (echoes.includes('answered_telephone')) {
+          filteredObservations.push("You answered when it rang.");
+        }
+        if (echoes.includes('ignored_telephone')) {
+          filteredObservations.push("You let it ring.");
+        }
+        if (echoes.includes('visited_radio')) {
+          filteredObservations.push("You listened to the static.");
+        }
+        if (echoes.includes('chose_honesty')) {
+          filteredObservations.push("You didn't want to be comforted.");
+        }
+        if (echoes.includes('stayed_idle')) {
+          filteredObservations.push("You didn't seem to be in a rush.");
+        }
         
         let filteredNote = d.websiteNote;
         if (/cat/i.test(filteredNote)) {

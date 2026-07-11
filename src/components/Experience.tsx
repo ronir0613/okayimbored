@@ -4,11 +4,14 @@ import { ScreenTransition } from './ScreenTransition';
 import { TarotCards } from './TarotCards';
 import { ArchaeologyEvent } from './ArchaeologyEvent';
 import { getRandomArtifact, type Artifact } from '../lib/archaeology';
+import { addEcho, hasEcho } from '../lib/echoes';
+import { useExperienceStore } from '../lib/store';
 import { PixelCat } from './LivingCats/PixelCat';
 import { navigate } from 'astro:transitions/client';
 
 export function Experience() {
   const [step, setStep] = useState(1);
+  const { restlessness_score, curiosity_score, pity_timer, incrementRestlessness, incrementPityTimer, resetPityTimer } = useExperienceStore();
   
   // Conversational questions state (V26)
   const [opening, setOpening] = useState<{text: string, options: string[]} | null>(null);
@@ -298,6 +301,7 @@ export function Experience() {
             subtitle: "Why did you stay?"
           });
           setHasSeenRareEvent(true);
+          addEcho('stayed_idle');
           clearInterval(timer);
         }
       }, 1000);
@@ -311,7 +315,7 @@ export function Experience() {
       window.dispatchEvent(new CustomEvent('cat:final_screen'));
       
       const isRare = Math.random() < 0.0001;
-      const delay = isRare ? 30000 : 3000 + Math.random() * 7000;
+      const delay = isRare ? 30000 : 15000 + Math.random() * 10000;
       
       const timer = setTimeout(() => {
         window.dispatchEvent(new CustomEvent('cat:false_ending'));
@@ -320,16 +324,37 @@ export function Experience() {
           setFalseEndingType(11);
           setFalseEndingPhase(1);
         } else {
-          setFalseEndingType(Math.floor(Math.random() * 10) + 1);
+          let type = 1;
+          const isHonest = hasEcho('chose_honesty');
+          const isExplorer = hasEcho('visited_rooftop') || hasEcho('visited_basement');
+          
+          if (isHonest) {
+            type = 10;
+          } else if (restlessness_score > 3) {
+            type = Math.random() > 0.5 ? 5 : 8;
+          } else if (isExplorer) {
+            type = 7;
+          } else {
+            const defaults = [1, 2, 4, 9];
+            type = defaults[Math.floor(Math.random() * defaults.length)];
+          }
+
+          if (type === 6 && typeof localStorage !== 'undefined' && localStorage.getItem('okayimbored_playing') !== 'true') {
+            type = 5; // fallback to quiet ending if record is not playing
+          }
+          setFalseEndingType(type);
           setFalseEndingPhase(1);
           const thoughts = ["you probably didn't need another video.", "you stayed longer than we expected.", "thanks."];
+          if (hasEcho('answered_telephone')) thoughts.push("conversations never really end.");
+          if (hasEcho('visited_rooftop')) thoughts.push("we can't stay looking out forever.");
+          if (hasEcho('tarot_the_moon')) thoughts.push("the night feels longer than it is.");
           setFalseEndingChoice(thoughts[Math.floor(Math.random() * thoughts.length)]);
         }
       }, delay);
       
       return () => clearTimeout(timer);
     }
-  }, [step]);
+  }, [step, restlessness_score]);
 
   // False ending progression
   useEffect(() => {
@@ -381,6 +406,9 @@ export function Experience() {
 
   const handleInteraction = (stepName?: string, value?: string) => {
     setLastInteraction(Date.now());
+    if (stepName === 'opening') addEcho('started_journey');
+    if (stepName === 'desired_content' && value === 'Something honest') addEcho('chose_honesty');
+    
     if (sessionId && stepName && value) {
       fetch('/api/interact', {
         method: 'POST',
@@ -405,19 +433,44 @@ export function Experience() {
   const nextStep = () => {
     handleInteraction();
 
-    // Random secret room discovery (0.8% chance)
-    if (step > 1 && step < 10 && Math.random() < 0.008) {
-      const secretRooms = ['/quiet', '/window', '/attic', '/basement', '/rooftop', '/wait', '/radio'];
-      const randomRoom = secretRooms[Math.floor(Math.random() * secretRooms.length)];
-      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true');
-      navigate(randomRoom);
-      return;
+    if (step <= 4) {
+      if (Date.now() - lastInteraction < 2000) {
+        incrementRestlessness();
+      }
+    }
+
+    let triggeredEvent = false;
+
+    // Random secret room discovery
+    if (step > 1 && step < 10) {
+      const baseSecretRoomChance = 0.005;
+      const additiveBonus = pity_timer * 0.003;
+      const multiplier = curiosity_score > 4 ? 1.5 : 1;
+      const finalSecretRoomChance = (baseSecretRoomChance + additiveBonus) * multiplier;
+
+      if (Math.random() < finalSecretRoomChance) {
+        triggeredEvent = true;
+        const secretRooms = ['/quiet', '/window', '/attic', '/basement', '/rooftop', '/wait', '/radio'];
+        const randomRoom = secretRooms[Math.floor(Math.random() * secretRooms.length)];
+        if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('okayimbored_returning_from_secret', 'true');
+        navigate(randomRoom);
+        resetPityTimer();
+        return;
+      }
     }
 
     // Occasional internet archaeology interruption (5% chance)
-    if (step > 1 && step < 9 && !isRareEventActive && !isArchaeologyActive && Math.random() < 0.05) {
-      setArchaeologyContent(getRandomArtifact());
-      setIsArchaeologyActive(true);
+    if (!triggeredEvent && step > 1 && step < 9 && !isRareEventActive && !isArchaeologyActive) {
+      if (Math.random() < 0.05) {
+        setArchaeologyContent(getRandomArtifact());
+        setIsArchaeologyActive(true);
+        triggeredEvent = true;
+        resetPityTimer();
+      }
+    }
+
+    if (!triggeredEvent) {
+      incrementPityTimer();
     }
 
     setStep(s => s + 1);
@@ -708,7 +761,10 @@ export function Experience() {
               </p>
               <div className="pt-4 flex justify-center">
                 <button 
-                  onClick={nextStep}
+                  onClick={() => {
+                    addEcho('saw_cat_intervention');
+                    nextStep();
+                  }}
                   className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all group border border-transparent hover:border-white/10"
                   aria-label="Apologize to the cat"
                 >

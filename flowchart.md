@@ -278,3 +278,37 @@ Reachable only by guessing their URL or following hidden text links within other
 - **Hour 6+ (any other time)**: "the door is locked. (come back after midnight)" Button: `go back.`
 
 Both states navigate back to `/` on click, setting the session restore flag.
+
+---
+
+## Invisible Narrative Journeys (Echoes)
+
+The experience uses a persistent `sessionStorage` mechanic (key: `okayimbored_echoes`) to track user actions across the site. These "echoes" invisibly influence content, probabilities, and microcopy in other rooms, creating a cohesive, personalized journey even when navigating back and forth through the labyrinth.
+
+### Tracked Actions (Echoes)
+- **Main Experience**: `started_journey` (Step 1), `saw_cat_intervention` (Step 5), `chose_honesty` (Step 7), `stayed_idle` (45s idle).
+- **Tarot Cards**: `tarot_[card_name]` (e.g., `tarot_the_moon`, `tarot_the_fool`, `tarot_the_hermit`, `tarot_the_tower`, `tarot_the_star`).
+- **Secret Rooms**: `visited_basement`, `visited_rooftop`, `visited_radio`, `visited_notices`, `visited_archive`, `visited_window` (triggered on mount).
+- **Telephone Room**: `answered_telephone` or `ignored_telephone` (based on user action).
+
+### Narrative Impacts
+
+| Location | Affected By | Resulting Change |
+|---|---|---|
+| **The Basement** | `tarot_the_moon` | 45% chance of glowing cat eyes (up from 30%). |
+| **The Basement** | `tarot_the_fool` | 35% chance of walking cat behind shelf (up from 20%). |
+| **The Basement** | `tarot_the_tower` | 1.5% chance per 2s of lights out (up from 0.5%). |
+| **The Basement** | `answered_telephone` | Adds *"The lines are disconnected."* to potential wall notes. |
+| **The Basement** | `tarot_the_hermit` | Adds *"Someone was looking for this."* to potential wall notes. |
+| **Telephone Room** | `visited_radio` | 30% chance for call dialogue: *"(faint radio static) / 'we were checking if anyone was still here.'"* |
+| **Rooftop** | `tarot_the_star` | 3% chance per 3s of a shooting star (up from 1%). |
+| **Rooftop** | `visited_window` | 30% chance for specific caption: *"a natural continuation."* |
+| **Radio Room** | `answered_telephone` | Freq 87.7 may broadcast: *"conversations never really end."* |
+| **Radio Room** | `tarot_the_moon` | Freq 91.3 may broadcast: *"the moon looks different tonight."* |
+| **Notice Board** | `saw_cat_intervention` OR `tarot_the_fool` | Adds a missing cat poster (*"Looking for a small, uncooperative cat."*) to the pool. |
+| **Archive** | `visited_basement` | Memory added: *'"Someone left tiny paw prints."'* |
+| **Archive** | `tarot_the_hermit` | Memory added: *'"We found someone hiding."'* |
+| **Outro (False Endings)** | `answered_telephone` | *"conversations never really end."* added to possible thoughts for False Ending Type 7. |
+| **Outro (False Endings)** | `visited_rooftop` | *"we can't stay looking out forever."* added to possible thoughts for False Ending Type 7. |
+| **Outro (False Endings)** | `tarot_the_moon` | *"the night feels longer than it is."* added to possible thoughts for False Ending Type 7. |
+| **Tonight's Logbook** | *Multiple Echoes* | Adds specific personalized observations based on the user's path (e.g., `tarot_the_tower` → *"Everything felt a bit unsteady."*, `chose_honesty` → *"You didn't want to be comforted."*, `visited_basement` → *"You wandered somewhere quiet."*, `ignored_telephone` → *"You let it ring."*). |

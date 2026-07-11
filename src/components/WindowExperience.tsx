@@ -85,9 +85,23 @@ export default function WindowExperience() {
 
   if (!mounted) return null;
 
+  const handleBack = () => {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('okayimbored_returning_from_secret', 'true');
+    }
+    window.location.href = '/';
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[100dvh] space-y-16 select-none bg-[#0a0a0a] w-full relative overflow-hidden m-0 p-0">
       
+      <button 
+        onClick={handleBack}
+        className="absolute top-8 left-8 text-[10px] font-mono text-white/10 hover:text-white/40 transition-colors uppercase tracking-widest cursor-pointer z-50"
+      >
+        turn away.
+      </button>
+
       {/* Container for Window Frame */}
       <div className="relative">
         

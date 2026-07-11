@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { addEcho } from '../lib/echoes';
 
 const TAROT_OBSERVATIONS = [
   ["...", "You can just leave it there."],
@@ -48,6 +49,7 @@ export function TarotCards({ onComplete, sessionId }: { onComplete: () => void, 
     
     const pickedCard = cards[idx];
     setObservation(TAROT_OBSERVATIONS[Math.floor(Math.random() * TAROT_OBSERVATIONS.length)]);
+    addEcho('tarot_' + pickedCard.title.toLowerCase().replace(/ /g, '_'));
 
     // Fire API call in background
     if (sessionId) {
