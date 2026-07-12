@@ -153,8 +153,10 @@ export function TheStation() {
           
           {/* Layer 0: Huge Skyscrapers */}
           <div className="absolute bottom-0 inset-x-0 w-full h-64 flex items-end justify-between px-8">
-            {[60, 95, 75, 40, 100, 85, 55, 90, 70, 80].map((h, i) => (
-               <div key={`sky-${i}`} className="w-12 sm:w-24 bg-[#202b38] relative flex flex-col justify-end items-center overflow-hidden" style={{ height: `${h}%` }}>
+            {[60, 95, 75, 40, 100, 85, 55, 90, 70, 80].map((h, i) => {
+               const isLean = h >= 95;
+               return (
+               <div key={`sky-${i}`} className={`${isLean ? 'w-6 sm:w-10' : 'w-12 sm:w-24'} bg-[#202b38] relative flex flex-col justify-end items-center overflow-hidden`} style={{ height: `${h}%` }}>
                  {/* Antennas on some skyscrapers */}
                  {i % 2 === 0 && (
                    <div className="absolute -top-6 w-[2px] h-6 bg-[#202b38]">
@@ -162,15 +164,20 @@ export function TheStation() {
                    </div>
                  )}
                  {/* Skyscraper windows */}
-                 {timeOfDay === 'night' && (
-                   <div className="absolute inset-0 flex flex-wrap gap-1 sm:gap-1.5 p-2 justify-center content-start opacity-70 mt-4">
-                     {[...Array(Math.floor(h * 1.2))].map((_, wIdx) => (
-                       <div key={`win-${wIdx}`} className={`w-1 h-2 sm:w-2 sm:h-3 ${Math.random() > 0.4 ? 'bg-amber-100/60' : 'bg-transparent'}`}></div>
-                     ))}
-                   </div>
-                 )}
+                 <div className="absolute inset-0 flex flex-wrap gap-1 sm:gap-1.5 p-2 justify-center content-start opacity-70 mt-4">
+                   {[...Array(Math.floor(h * (isLean ? 2 : 1.2)))].map((_, wIdx) => {
+                     const isLit = ((h * wIdx * 17.3 + h * 4.1 + wIdx * 2.3) % 1) > 0.4;
+                     const windowColor = timeOfDay === 'night' 
+                       ? (isLit ? 'bg-amber-100/60' : 'bg-transparent')
+                       : (isLit ? 'bg-sky-200/20' : 'bg-black/30');
+                     return (
+                       <div key={`win-${wIdx}`} className={`w-1 h-2 sm:w-2 sm:h-3 ${windowColor}`}></div>
+                     );
+                   })}
+                 </div>
                </div>
-            ))}
+               );
+            })}
           </div>
 
           {/* Distant City Skyline */}
@@ -179,13 +186,17 @@ export function TheStation() {
             {[20, 40, 25, 55, 30, 80, 45, 15, 60, 35, 20, 70, 50, 25, 40, 15].map((h, i) => (
                <div key={`build1-${i}`} className="w-8 sm:w-16 bg-[#1a2530] relative overflow-hidden" style={{ height: `${h}%` }}>
                  {/* Windows */}
-                 {timeOfDay === 'night' && (
-                   <div className="absolute inset-0 flex flex-wrap gap-[2px] sm:gap-1 p-1 justify-center content-start opacity-50 mt-2">
-                     {[...Array(Math.floor(h))].map((_, wIdx) => (
-                       <div key={`b1win-${wIdx}`} className={`w-1 h-1 sm:w-1.5 sm:h-2 ${Math.random() > 0.5 ? 'bg-orange-100/50' : 'bg-transparent'}`}></div>
-                     ))}
-                   </div>
-                 )}
+                 <div className="absolute inset-0 flex flex-wrap gap-[2px] sm:gap-1 p-1 justify-center content-start opacity-50 mt-2">
+                   {[...Array(Math.floor(h))].map((_, wIdx) => {
+                     const isLit = ((h * wIdx * 11.7 + h * 3.3 + wIdx * 5.1) % 1) > 0.5;
+                     const windowColor = timeOfDay === 'night'
+                       ? (isLit ? 'bg-orange-100/50' : 'bg-transparent')
+                       : (isLit ? 'bg-white/10' : 'bg-black/30');
+                     return (
+                       <div key={`b1win-${wIdx}`} className={`w-1 h-1 sm:w-1.5 sm:h-2 ${windowColor}`}></div>
+                     );
+                   })}
+                 </div>
                </div>
             ))}
           </div>
@@ -194,13 +205,17 @@ export function TheStation() {
             {[30, 15, 45, 20, 35, 60, 25, 90, 50, 10, 80, 40, 20, 55, 30, 20, 45].map((h, i) => (
                <div key={`build2-${i}`} className="w-10 sm:w-20 bg-[#121824] relative overflow-hidden" style={{ height: `${h}%` }}>
                  {/* Windows */}
-                 {timeOfDay === 'night' && (
-                   <div className="absolute inset-0 flex flex-wrap gap-[2px] p-1 justify-center content-start opacity-40 mt-1">
-                     {[...Array(Math.floor(h))].map((_, wIdx) => (
-                       <div key={`b2win-${wIdx}`} className={`w-1 h-1 sm:w-[3px] sm:h-[3px] ${Math.random() > 0.6 ? 'bg-yellow-100/40' : 'bg-transparent'}`}></div>
-                     ))}
-                   </div>
-                 )}
+                 <div className="absolute inset-0 flex flex-wrap gap-[2px] p-1 justify-center content-start opacity-40 mt-1">
+                   {[...Array(Math.floor(h))].map((_, wIdx) => {
+                     const isLit = ((h * wIdx * 19.1 + h * 7.7 + wIdx * 2.9) % 1) > 0.6;
+                     const windowColor = timeOfDay === 'night'
+                       ? (isLit ? 'bg-yellow-100/40' : 'bg-transparent')
+                       : (isLit ? 'bg-white/10' : 'bg-black/30');
+                     return (
+                       <div key={`b2win-${wIdx}`} className={`w-1 h-1 sm:w-[3px] sm:h-[3px] ${windowColor}`}></div>
+                     );
+                   })}
+                 </div>
                </div>
             ))}
           </div>

@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 
-const LEAF_COLORS = ['#5b4a36', '#4a3b2c', '#3a4f32', '#6b5428', '#2d3827'];
+const LEAF_COLORS = ['#ffb7c5', '#ffc0cb', '#ffd1dc', '#ffe4e1', '#ffffff', '#ff9eaa'];
 
 export function WindLeaves() {
   const leaves = useMemo(() => {
-    return Array.from({ length: 25 }).map((_, i) => {
+    return Array.from({ length: 35 }).map((_, i) => { // Increased count slightly for blossoms
       // Start mostly from left offscreen, but some can start higher up
       const isLeftEdge = Math.random() > 0.3;
       const startX = isLeftEdge ? -10 - Math.random() * 20 : Math.random() * 100;
@@ -19,9 +19,9 @@ export function WindLeaves() {
         endY: startY + 20 + Math.random() * 40, // Drift downwards
         duration: 8 + Math.random() * 12, // Move relatively fast with the wind
         delay: Math.random() * 20, // Stagger spawns
-        size: 4 + Math.random() * 8, // Leaf size between 4px and 12px
+        size: 3 + Math.random() * 6, // Blossom petals are slightly smaller
         rotationSpeed: (Math.random() > 0.5 ? 1 : -1) * (360 + Math.random() * 1080),
-        opacity: 0.3 + Math.random() * 0.6,
+        opacity: 0.4 + Math.random() * 0.5,
         color: LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)]
       };
     });

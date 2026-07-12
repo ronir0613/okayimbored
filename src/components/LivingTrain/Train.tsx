@@ -66,6 +66,7 @@ export const Train: React.FC<TrainProps> = ({
           flexShrink: 0,
           cursor: wagon.isBoardable ? 'pointer' : 'default',
           pointerEvents: wagon.isBoardable ? 'auto' : 'auto',
+          clipPath: 'inset(1px 0px 0px 0px)',
         }}
         onClick={wagon.isBoardable ? onBoard : undefined}
         className={wagon.isBoardable ? 'hover:brightness-125 transition-all' : ''}
