@@ -83,6 +83,7 @@ export interface TrainProps {
   onArrival?: () => void;
   onDeparture?: () => void;
   onBoard?: () => void;
+  isInteractable?: boolean;
 
   className?: string;
   style?: React.CSSProperties;

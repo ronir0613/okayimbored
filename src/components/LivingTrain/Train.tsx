@@ -17,6 +17,7 @@ export const Train: React.FC<TrainProps> = ({
   className = '',
   style = {},
   onBoard,
+  isInteractable = true,
 }) => {
   const { containerRef, trainData } = useTrainAnimation({
     trainType,
@@ -64,12 +65,12 @@ export const Train: React.FC<TrainProps> = ({
           transform: `scaleX(${wagonScaleX})`,
           imageRendering: 'pixelated',
           flexShrink: 0,
-          cursor: wagon.isBoardable ? 'pointer' : 'default',
-          pointerEvents: wagon.isBoardable ? 'auto' : 'auto',
+          cursor: (wagon.isBoardable && isInteractable) ? 'pointer' : 'default',
+          pointerEvents: (wagon.isBoardable && isInteractable) ? 'auto' : 'auto',
           clipPath: 'inset(1px 0px 0px 0px)',
         }}
-        onClick={wagon.isBoardable ? onBoard : undefined}
-        className={wagon.isBoardable ? 'hover:brightness-125 transition-all' : ''}
+        onClick={(wagon.isBoardable && isInteractable) ? onBoard : undefined}
+        className={(wagon.isBoardable && isInteractable) ? 'hover:brightness-125 transition-all' : ''}
       >
         {wagon.tag && (
           <div 

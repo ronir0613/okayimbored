@@ -6,6 +6,8 @@ import { useStationAudio } from './useStationAudio';
 import { useCatBehavior } from './LivingCats/useCatBehavior';
 import { useMicroEvents } from './useMicroEvents';
 import { WindLeaves } from './WindLeaves';
+import { SkyDetails } from './SkyDetails';
+import { PlatformLeaves } from './PlatformLeaves';
 
 type StationState = 'WAITING_EMPTY' | 'ARRIVING' | 'STOPPED' | 'DEPARTING_EMPTY' | 'DEPARTING_BOARDED';
 
@@ -110,6 +112,9 @@ export function TheStation() {
       {/* Layer 1: Atmosphere (Top ~40%) */}
       <div className={`relative w-full h-[40dvh] transition-colors duration-[5000ms] ${timeOfDayClass} flex flex-col justify-end overflow-hidden shrink-0`}>
         
+        {/* Airplane trails and distant birds */}
+        <SkyDetails timeOfDay={timeOfDay} />
+
         {/* Animated Clouds */}
         <motion.div 
           className="absolute inset-0 opacity-30 mix-blend-screen pointer-events-none"
@@ -296,6 +301,7 @@ export function TheStation() {
               stationary={true}
               showTracks={false}
               onBoard={handleBoardTrain}
+              isInteractable={stationState === 'STOPPED'}
               timeOfDay={timeOfDay}
               className={`drop-shadow-[0_-5px_15px_rgba(0,0,0,0.5)] transition-all duration-3000 ${timeOfDay === 'night' ? 'filter brightness-[0.7] contrast-[1.2]' : 'filter brightness-[0.85] contrast-[1.1] sepia-[0.1]'}`}
               style={{ overflow: 'visible', width: 'fit-content' }}
@@ -313,8 +319,11 @@ export function TheStation() {
       }`}>
         
         {/* Platform Edge Trim */}
-        <div className="absolute top-0 inset-x-0 w-full h-3 border-b-2 border-black/60 bg-white/10 pointer-events-none"></div>
-        <div className="absolute top-3 inset-x-0 w-full h-1 bg-black/40 pointer-events-none"></div>
+        <div className="absolute top-0 inset-x-0 w-full h-3 border-b-2 border-black/60 bg-white/10 pointer-events-none z-30"></div>
+        <div className="absolute top-3 inset-x-0 w-full h-1 bg-black/40 pointer-events-none z-30"></div>
+
+        {/* Fallen Petals on the Platform */}
+        <PlatformLeaves />
 
         {/* Concrete Block Pattern */}
         <div 
