@@ -3,34 +3,48 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Train } from './LivingTrain/Train';
 import { PixelCat, type CatState } from './LivingCats/PixelCat';
 import { useStationAudio } from './useStationAudio';
+import { useCatBehavior } from './LivingCats/useCatBehavior';
+import { useMicroEvents } from './useMicroEvents';
 
 type StationState = 'WAITING_EMPTY' | 'ARRIVING' | 'STOPPED' | 'DEPARTING_EMPTY' | 'DEPARTING_BOARDED';
 
 export function TheStation() {
   const [stationState, setStationState] = useState<StationState>('WAITING_EMPTY');
-  const { playWind, stopWind, playTrainRumble, initAudio } = useStationAudio();
+  const { playTimeSpecificAmbience, playTrainRumble, stopTrainRumble, initAudio } = useStationAudio();
   const [timeOfDayClass, setTimeOfDayClass] = useState('bg-[#0F2027]');
   const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'night'>('night');
   const [trainTriggered, setTrainTriggered] = useState(0);
   const [currentTrainType, setCurrentTrainType] = useState<'TER' | 'TGV' | 'Industrial' | 'random'>('TER');
-  const [catState, setCatState] = useState<CatState>('idle');
+  
+  const { catState, catPosition, isVisible: isCatVisible } = useCatBehavior();
+  const { lightsFlickering, birdLanded } = useMicroEvents();
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour >= 6 && hour < 12) {
-      setTimeOfDay('morning');
-      setTimeOfDayClass('bg-gradient-to-b from-sky-300 via-orange-100 to-amber-200');
-    } else if (hour >= 12 && hour < 17) {
-      setTimeOfDay('afternoon');
-      setTimeOfDayClass('bg-gradient-to-b from-blue-400 to-blue-200');
-    } else if (hour >= 17 && hour < 20) {
-      setTimeOfDay('evening');
-      setTimeOfDayClass('bg-gradient-to-b from-indigo-800 via-purple-500 to-orange-400');
-    } else {
-      setTimeOfDay('night');
-      setTimeOfDayClass('bg-gradient-to-b from-[#060B19] via-[#0D1832] to-[#17254A]');
-    }
+    const updateTime = () => {
+      const hour = new Date().getHours();
+      if (hour >= 6 && hour < 12) {
+        setTimeOfDay('morning');
+        setTimeOfDayClass('bg-gradient-to-b from-sky-300 via-orange-50 to-amber-100');
+      } else if (hour >= 12 && hour < 17) {
+        setTimeOfDay('afternoon');
+        setTimeOfDayClass('bg-gradient-to-b from-blue-400 to-sky-200');
+      } else if (hour >= 17 && hour < 20) {
+        setTimeOfDay('evening');
+        setTimeOfDayClass('bg-gradient-to-b from-indigo-800 via-purple-400 to-orange-300');
+      } else {
+        setTimeOfDay('night');
+        setTimeOfDayClass('bg-gradient-to-b from-[#040812] via-[#0A1226] to-[#121E3B]');
+      }
+    };
+    
+    updateTime();
+    const interval = setInterval(updateTime, 60000); // Check every minute
+    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    playTimeSpecificAmbience(timeOfDay);
+  }, [timeOfDay, playTimeSpecificAmbience]);
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
@@ -39,22 +53,22 @@ export function TheStation() {
       case 'WAITING_EMPTY':
         timeout = setTimeout(() => {
           setStationState('ARRIVING');
-          playWind();
-        }, 5000 + Math.random() * 5000); // Wait 5-10 seconds before arriving
+        }, 15000 + Math.random() * 20000); // Wait 15-35 seconds before arriving
         break;
 
       case 'ARRIVING':
         playTrainRumble();
         timeout = setTimeout(() => {
           setStationState('STOPPED');
+          stopTrainRumble();
         }, 5000);
         break;
 
       case 'STOPPED':
-        // Train waits for 5-8 seconds
+        // Train waits for 15-25 seconds
         timeout = setTimeout(() => {
           setStationState('DEPARTING_EMPTY');
-        }, 5000 + Math.random() * 3000);
+        }, 15000 + Math.random() * 10000);
         break;
 
       case 'DEPARTING_EMPTY':
@@ -64,7 +78,7 @@ export function TheStation() {
           setCurrentTrainType(isPassenger ? (Math.random() > 0.5 ? 'TER' : 'TGV') : 'Industrial');
           setStationState('WAITING_EMPTY');
           setTrainTriggered(prev => prev + 1);
-          stopWind();
+          stopTrainRumble();
         }, 20000); // Wait 20s to perfectly match the CSS depart animation duration
         break;
         
@@ -74,7 +88,7 @@ export function TheStation() {
     }
 
     return () => clearTimeout(timeout);
-  }, [stationState, playWind, stopWind, playTrainRumble]);
+  }, [stationState, playTrainRumble, stopTrainRumble]);
 
 
   const handleBoardTrain = () => {
@@ -90,44 +104,91 @@ export function TheStation() {
       <div className="pointer-events-none fixed inset-0 bg-[url('/noise.png')] opacity-[0.03] z-50 mix-blend-overlay"></div>
 
       {/* Layer 1: Atmosphere (Top ~30%) */}
-      <div className={`relative w-full h-[30dvh] transition-colors duration-[3000ms] ${timeOfDayClass} flex flex-col justify-end overflow-hidden shrink-0`}>
-        {/* Morning Mist */}
-        {timeOfDay === 'morning' && (
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/30 mix-blend-screen blur-md pointer-events-none"></div>
+      <div className={`relative w-full h-[30dvh] transition-colors duration-[5000ms] ${timeOfDayClass} flex flex-col justify-end overflow-hidden shrink-0`}>
+        
+        {/* Animated Clouds */}
+        <motion.div 
+          className="absolute inset-0 opacity-30 mix-blend-screen pointer-events-none"
+          animate={{ x: ['0%', '-50%'] }}
+          transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
+          style={{ width: '200%', backgroundImage: 'url("/assets/backgrounds/clouds.png")', backgroundSize: '50% 100%', backgroundRepeat: 'repeat-x' }}
+        />
+
+        {/* Morning Mist / Particles */}
+        {(timeOfDay === 'morning' || timeOfDay === 'afternoon') && (
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-b from-transparent to-white/20 mix-blend-screen blur-lg pointer-events-none"
+            animate={{ opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+          />
         )}
         
         {/* Faint Stars for Night */}
-        {timeOfDay === 'night' && (
-          <div className="absolute inset-0 opacity-40">
-            {[...Array(20)].map((_, i) => (
-              <div 
+        {(timeOfDay === 'night' || timeOfDay === 'evening') && (
+          <div className={`absolute inset-0 transition-opacity duration-3000 ${timeOfDay === 'night' ? 'opacity-50' : 'opacity-10'}`}>
+            {[...Array(25)].map((_, i) => (
+              <motion.div 
                 key={i} 
                 className="absolute bg-white rounded-full" 
                 style={{
-                  top: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 90}%`,
                   left: `${Math.random() * 100}%`,
-                  width: `${Math.random() * 2}px`,
-                  height: `${Math.random() * 2}px`,
-                  opacity: Math.random() * 0.8 + 0.2
+                  width: `${Math.random() * 1.5 + 0.5}px`,
+                  height: `${Math.random() * 1.5 + 0.5}px`,
+                  opacity: Math.random() * 0.6 + 0.1
                 }}
+                animate={{ opacity: [Math.random() * 0.4 + 0.1, Math.random() * 0.8 + 0.2, Math.random() * 0.4 + 0.1] }}
+                transition={{ duration: 3 + Math.random() * 4, repeat: Infinity, ease: 'easeInOut' }}
               />
             ))}
           </div>
         )}
 
         {/* Subtle Distant Horizon */}
-        <div className="absolute bottom-0 inset-x-0 h-16 w-full flex items-end pointer-events-none z-10 opacity-60 mix-blend-multiply">
+        <div className="absolute bottom-0 inset-x-0 h-48 w-full flex items-end pointer-events-none z-10 opacity-70 mix-blend-multiply transition-opacity duration-5000">
+          
+          {/* Layer 0: Skyscrapers */}
+          <div className="absolute bottom-0 inset-x-0 w-full h-32 flex items-end justify-between px-8">
+            {[60, 95, 75, 40, 100, 85, 55, 90, 70, 80].map((h, i) => (
+               <div key={`sky-${i}`} className="w-8 sm:w-16 bg-[#202b38] relative flex flex-col justify-end items-center" style={{ height: `${h}%` }}>
+                 {/* Antennas on some skyscrapers */}
+                 {i % 2 === 0 && (
+                   <div className="absolute -top-6 w-[2px] h-6 bg-[#202b38]">
+                      <div className="absolute top-0 -left-[1px] w-1 h-1 bg-red-500/80 rounded-full animate-pulse"></div>
+                   </div>
+                 )}
+                 {/* Skyscraper windows */}
+                 {timeOfDay === 'night' && (
+                   <div className="absolute inset-0 flex flex-wrap gap-1 p-1 overflow-hidden justify-center content-start opacity-40">
+                     {[...Array(Math.floor(h/5))].map((_, wIdx) => (
+                       <div key={`win-${wIdx}`} className={`w-1 h-2 ${Math.random() > 0.6 ? 'bg-amber-100/60' : 'bg-transparent'}`}></div>
+                     ))}
+                   </div>
+                 )}
+               </div>
+            ))}
+          </div>
+
           {/* Distant City Skyline */}
           <div className="absolute bottom-0 left-0 right-0 h-2 bg-[#1a2530]"></div>
           <div className="absolute bottom-0 inset-x-0 w-full h-16 flex items-end justify-around px-4">
             {[20, 40, 25, 55, 30, 80, 45, 15, 60, 35, 20, 70, 50, 25, 40, 15].map((h, i) => (
-               <div key={`build1-${i}`} className="w-8 sm:w-16 bg-[#1a2530]" style={{ height: `${h}%` }}></div>
+               <div key={`build1-${i}`} className="w-8 sm:w-16 bg-[#1a2530] relative" style={{ height: `${h}%` }}>
+                 {/* Occasional illuminated windows at night */}
+                 {timeOfDay === 'night' && Math.random() > 0.8 && (
+                   <div className="absolute top-[20%] left-[20%] w-[20%] h-[10%] bg-amber-100/40"></div>
+                 )}
+               </div>
             ))}
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#121824]"></div>
           <div className="absolute bottom-0 inset-x-0 w-full h-10 flex items-end justify-around px-2">
             {[30, 15, 45, 20, 35, 60, 25, 90, 50, 10, 80, 40, 20, 55, 30, 20, 45].map((h, i) => (
-               <div key={`build2-${i}`} className="w-10 sm:w-20 bg-[#121824]" style={{ height: `${h}%` }}></div>
+               <div key={`build2-${i}`} className="w-10 sm:w-20 bg-[#121824] relative" style={{ height: `${h}%` }}>
+                 {timeOfDay === 'night' && Math.random() > 0.85 && (
+                   <div className="absolute top-[40%] right-[30%] w-[15%] h-[15%] bg-yellow-100/30"></div>
+                 )}
+               </div>
             ))}
           </div>
           
@@ -137,11 +198,27 @@ export function TheStation() {
               <div key={i} className="relative h-full w-[2px] bg-[#05080f]">
                 <div className="absolute top-2 -left-3 w-8 h-[1px] bg-[#05080f]"></div>
                 <div className="absolute top-4 -left-2 w-6 h-[1px] bg-[#05080f]"></div>
+                {/* Subtle blinking red lights on distant towers */}
+                {i % 4 === 0 && (
+                  <motion.div 
+                    className="absolute -top-1 left-0 w-1 h-1 bg-red-500 rounded-full"
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, times: [0, 0.1, 1] }}
+                  />
+                )}
               </div>
             ))}
-            {/* Power lines connecting poles */}
-            <div className="absolute top-2 inset-x-0 h-[1px] bg-[#05080f] opacity-30 transform origin-left rotate-[0.5deg]"></div>
-            <div className="absolute top-4 inset-x-0 h-[1px] bg-[#05080f] opacity-30 transform origin-left -rotate-[0.5deg]"></div>
+            {/* Power lines connecting poles swaying slowly */}
+            <motion.div 
+              className="absolute top-2 inset-x-0 h-[1px] bg-[#05080f] opacity-30 transform origin-left"
+              animate={{ rotate: ['0.5deg', '0.6deg', '0.5deg'] }}
+              transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div 
+              className="absolute top-4 inset-x-0 h-[1px] bg-[#05080f] opacity-30 transform origin-left"
+              animate={{ rotate: ['-0.5deg', '-0.4deg', '-0.5deg'] }}
+              transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+            />
           </div>
         </div>
 
@@ -153,24 +230,33 @@ export function TheStation() {
       </div>
 
       {/* Layer 2: Train (Middle ~40%) */}
-      {/* We clip the train here so it feels massive but stays contained in its layer */}
-      <div className="relative w-full h-[40dvh] bg-black/10 overflow-hidden flex items-end z-30">
+      <div className="relative w-full h-[40dvh] overflow-hidden flex items-end z-30 transition-colors duration-5000">
         
+        {/* Subtle background behind train for depth */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none"></div>
+
         {/* The Train Layer */}
-        {/* With scale=32, the train is 1024px tall. We push it down by ~96px so the bottom track/wheels are hidden by the platform. */}
         <div className="absolute bottom-[-96px] w-full h-[1024px] pointer-events-none flex justify-center">
            <motion.div
-            key={trainTriggered} // Force remount if we want a fresh train
+            key={trainTriggered}
             initial={{ x: 'calc(50vw + 50%)' }}
              animate={{
               x: stationState === 'WAITING_EMPTY' ? 'calc(50vw + 50%)' :
-                 stationState === 'ARRIVING' || stationState === 'STOPPED' ? '0vw' : 'calc(-50vw - 50%)'
+                 stationState === 'ARRIVING' || stationState === 'STOPPED' ? '0vw' : 'calc(-50vw - 50%)',
+              y: stationState === 'STOPPED' ? [0, 0.5, 0] : 0
             }}
             transition={{ 
-              duration: stationState === 'WAITING_EMPTY' ? 0 : 
-                        stationState === 'DEPARTING_EMPTY' || stationState === 'DEPARTING_BOARDED' ? 20 : 10, 
-              ease: stationState === 'ARRIVING' ? 'easeOut' : 
-                    stationState === 'WAITING_EMPTY' ? 'linear' : 'easeIn'
+              x: {
+                duration: stationState === 'WAITING_EMPTY' ? 0 : 
+                          stationState === 'DEPARTING_EMPTY' || stationState === 'DEPARTING_BOARDED' ? 20 : 10, 
+                ease: stationState === 'ARRIVING' ? 'easeOut' : 
+                      stationState === 'WAITING_EMPTY' ? 'linear' : 'easeIn'
+              },
+              y: {
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut'
+              }
             }}
             className="w-fit h-full pointer-events-auto"
           >
@@ -182,7 +268,8 @@ export function TheStation() {
               stationary={true}
               showTracks={false}
               onBoard={handleBoardTrain}
-              className="drop-shadow-[0_-5px_15px_rgba(255,165,0,0.15)] filter brightness-[0.85] contrast-[1.1] sepia-[0.1]"
+              timeOfDay={timeOfDay}
+              className={`drop-shadow-[0_-5px_15px_rgba(0,0,0,0.5)] transition-all duration-3000 ${timeOfDay === 'night' ? 'filter brightness-[0.7] contrast-[1.2]' : 'filter brightness-[0.85] contrast-[1.1] sepia-[0.1]'}`}
               style={{ overflow: 'visible', width: 'fit-content' }}
             />
           </motion.div>
@@ -190,29 +277,43 @@ export function TheStation() {
       </div>
 
       {/* Layer 3: Platform (Bottom ~30%) */}
-      <div className={`relative w-full h-[30dvh] transition-colors duration-[3000ms] shadow-[inset_0_30px_40px_rgba(0,0,0,0.8)] z-40 overflow-hidden ${
-        timeOfDay === 'morning' ? 'bg-[#1a1c23]' : 
-        timeOfDay === 'afternoon' ? 'bg-[#22242a]' : 
-        timeOfDay === 'evening' ? 'bg-[#151210]' : 
-        'bg-[#0a0a0c]'
+      <div className={`relative w-full h-[30dvh] transition-colors duration-[5000ms] shadow-[inset_0_30px_50px_rgba(0,0,0,0.9)] z-40 overflow-hidden ${
+        timeOfDay === 'morning' ? 'bg-[#18191e]' : 
+        timeOfDay === 'afternoon' ? 'bg-[#1e2025]' : 
+        timeOfDay === 'evening' ? 'bg-[#12100f]' : 
+        'bg-[#08080a]'
       }`}>
         
+        {/* Subtle noise and dirt textures on platform */}
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.04] mix-blend-overlay pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
+
         {/* Blending light spilling onto platform */}
-        <div className={`absolute top-0 inset-x-0 w-full h-full flex justify-around px-16 sm:px-32 pointer-events-none mix-blend-screen transition-opacity duration-[3000ms] opacity-40`}>
+        <div className={`absolute top-0 inset-x-0 w-full h-full flex justify-around px-16 sm:px-32 pointer-events-none mix-blend-screen transition-opacity duration-[5000ms] opacity-30 ${lightsFlickering ? 'opacity-10' : ''}`}>
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className={`w-32 sm:w-64 h-[150%] bg-gradient-to-b to-transparent blur-3xl transform -skew-x-12 origin-top transition-colors duration-[3000ms] ${
-              timeOfDay === 'morning' ? 'from-amber-200/10' :
-              timeOfDay === 'afternoon' ? 'from-transparent' :
-              timeOfDay === 'evening' ? 'from-amber-500/15' :
-              'from-indigo-400/10'
+            <div key={i} className={`w-32 sm:w-64 h-[150%] bg-gradient-to-b to-transparent blur-3xl transform -skew-x-12 origin-top transition-colors duration-[5000ms] ${
+              timeOfDay === 'morning' ? 'from-amber-100/10' :
+              timeOfDay === 'afternoon' ? 'from-white/5' :
+              timeOfDay === 'evening' ? 'from-amber-400/15' :
+              'from-blue-300/10'
             }`}></div>
           ))}
         </div>
+        
+        {/* Bird micro event */}
+        {birdLanded && timeOfDay !== 'night' && (
+          <div className="absolute bottom-[40%] right-[15%] w-2 h-2 bg-black/60 rounded-full animate-pulse" />
+        )}
 
         {/* The Cat */}
-        <div className="absolute bottom-[20%] right-[30%] sm:right-[40%] z-50 scale-125 origin-bottom">
-          <PixelCat state={catState} />
-        </div>
+        {isCatVisible && (
+          <div 
+            className="absolute bottom-[20%] z-50 scale-125 origin-bottom transition-all duration-100"
+            style={{ left: `${catPosition}%` }}
+          >
+            <PixelCat state={catState} />
+          </div>
+        )}
       </div>
 
       {/* Fade out ending transition for boarding */}

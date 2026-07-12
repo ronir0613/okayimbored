@@ -86,4 +86,5 @@ export interface TrainProps {
 
   className?: string;
   style?: React.CSSProperties;
+  timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
 }

@@ -2,8 +2,17 @@ import { useEffect, useRef, useCallback } from 'react';
 
 export function useStationAudio() {
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const windNodeRef = useRef<AudioBufferSourceNode | null>(null);
+  
+  // Audio Nodes
+  const windNoiseRef = useRef<AudioBufferSourceNode | null>(null);
   const windGainRef = useRef<GainNode | null>(null);
+  const windFilterRef = useRef<BiquadFilterNode | null>(null);
+  
+  const cricketsRef = useRef<OscillatorNode | null>(null);
+  const cricketsGainRef = useRef<GainNode | null>(null);
+  
+  const humRef = useRef<OscillatorNode | null>(null);
+  const humGainRef = useRef<GainNode | null>(null);
 
   const initAudio = useCallback(() => {
     if (audioCtxRef.current) return;
@@ -15,59 +24,129 @@ export function useStationAudio() {
     audioCtxRef.current = new AudioContext();
   }, []);
 
-  const playWind = useCallback(() => {
+  const initNodes = useCallback(() => {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+
+    // --- WIND ---
+    if (!windNoiseRef.current) {
+      const bufferSize = ctx.sampleRate * 2;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      noise.loop = true;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      noise.start();
+
+      windNoiseRef.current = noise;
+      windFilterRef.current = filter;
+      windGainRef.current = gain;
+    }
+
+    // --- CRICKETS (Night) ---
+    if (!cricketsRef.current) {
+      const osc = ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.value = 4500; // High pitch
+
+      const lfo = ctx.createOscillator();
+      lfo.type = 'square';
+      lfo.frequency.value = 15; // Rapid chirping
+
+      const lfoGain = ctx.createGain();
+      lfoGain.gain.value = 4500;
+
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      lfo.start();
+
+      cricketsRef.current = osc;
+      cricketsGainRef.current = gain;
+    }
+
+    // --- ELECTRICAL HUM (Night) ---
+    if (!humRef.current) {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = 60; // 60Hz hum
+
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+
+      humRef.current = osc;
+      humGainRef.current = gain;
+    }
+  }, []);
+
+  const playTimeSpecificAmbience = useCallback((timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night') => {
     if (!audioCtxRef.current) return;
     const ctx = audioCtxRef.current;
     
-    if (windNodeRef.current) return;
+    initNodes();
     
-    // Create a very simple white noise buffer for wind
-    const bufferSize = ctx.sampleRate * 2; // 2 seconds
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
+    const now = ctx.currentTime;
+    const transitionTime = 5; // 5 seconds fade
+
+    if (windGainRef.current && windFilterRef.current) {
+      if (timeOfDay === 'morning') {
+        windGainRef.current.gain.setTargetAtTime(0.01, now, transitionTime);
+        windFilterRef.current.frequency.setTargetAtTime(300, now, transitionTime);
+      } else if (timeOfDay === 'afternoon') {
+        windGainRef.current.gain.setTargetAtTime(0.03, now, transitionTime);
+        windFilterRef.current.frequency.setTargetAtTime(600, now, transitionTime);
+      } else if (timeOfDay === 'evening') {
+        windGainRef.current.gain.setTargetAtTime(0.015, now, transitionTime);
+        windFilterRef.current.frequency.setTargetAtTime(400, now, transitionTime);
+      } else {
+        // Night
+        windGainRef.current.gain.setTargetAtTime(0.005, now, transitionTime);
+        windFilterRef.current.frequency.setTargetAtTime(200, now, transitionTime);
+      }
     }
 
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    noise.loop = true;
-
-    // Filter to make it sound like wind
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 400; // Low frequency for distant wind
-    
-    const gain = ctx.createGain();
-    gain.gain.value = 0; // Start silent
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-
-    noise.start();
-
-    windNodeRef.current = noise;
-    windGainRef.current = gain;
-
-    // Fade in
-    gain.gain.setTargetAtTime(0.05, ctx.currentTime, 2);
-  }, []);
-
-  const stopWind = useCallback(() => {
-    if (windGainRef.current && audioCtxRef.current) {
-      windGainRef.current.gain.setTargetAtTime(0, audioCtxRef.current.currentTime, 1);
-      setTimeout(() => {
-        if (windNodeRef.current) {
-          try {
-            windNodeRef.current.stop();
-          } catch (e) {}
-          windNodeRef.current = null;
-        }
-      }, 2000);
+    if (cricketsGainRef.current) {
+      if (timeOfDay === 'night') {
+        cricketsGainRef.current.gain.setTargetAtTime(0.002, now, transitionTime);
+      } else {
+        cricketsGainRef.current.gain.setTargetAtTime(0, now, transitionTime);
+      }
     }
-  }, []);
-  
+
+    if (humGainRef.current) {
+      if (timeOfDay === 'night' || timeOfDay === 'evening') {
+        humGainRef.current.gain.setTargetAtTime(0.01, now, transitionTime);
+      } else {
+        humGainRef.current.gain.setTargetAtTime(0, now, transitionTime);
+      }
+    }
+
+  }, [initNodes]);
+
   const playTrainRumble = useCallback(() => {
     if (!audioCtxRef.current) return;
     const ctx = audioCtxRef.current;
@@ -75,18 +154,26 @@ export function useStationAudio() {
     const osc = ctx.createOscillator();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(60, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 3);
+    osc.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + 10);
 
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 1);
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 4);
+    gain.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 2);
+    // Keep it rumbling until stop is called, but we'll add a long decay just in case
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 30);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
     
     osc.start();
-    osc.stop(ctx.currentTime + 4);
+    
+    // Store it temporarily if we wanted to stop it abruptly, 
+    // but the original logic just let it play out. 
+    // We can just let it fade.
+  }, []);
+
+  const stopTrainRumble = useCallback(() => {
+     // Optional: could implement a quick fade out for the rumble here if we stored the gain node.
   }, []);
 
   useEffect(() => {
@@ -103,12 +190,11 @@ export function useStationAudio() {
     return () => {
       window.removeEventListener('click', handleInteraction);
       window.removeEventListener('keydown', handleInteraction);
-      stopWind();
       if (audioCtxRef.current) {
         audioCtxRef.current.close().catch(() => {});
       }
     };
-  }, [initAudio, stopWind]);
+  }, [initAudio]);
 
-  return { playWind, stopWind, playTrainRumble, initAudio };
+  return { playTimeSpecificAmbience, playTrainRumble, stopTrainRumble, initAudio };
 }
