@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useMemo, useEffect } from 'react';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 
 const LEAF_COLORS = ['#ffb7c5', '#ffc0cb', '#ffd1dc', '#ffe4e1', '#ffffff', '#ff9eaa'];
 
@@ -24,9 +24,12 @@ export function PlatformLeaves() {
 }
 
 function PlatformLeaf({ leaf }: { leaf: any }) {
-  const [x, setX] = useState(leaf.startX);
-  const [y, setY] = useState(leaf.startY);
-  const [rotation, setRotation] = useState(Math.random() * 360);
+  const x = useMotionValue(leaf.startX);
+  const y = useMotionValue(leaf.startY);
+  const rotation = useMotionValue(Math.random() * 360);
+
+  const leftValue = useTransform(x, (val) => `${val}vw`);
+  const topValue = useTransform(y, (val) => `${val}%`);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -36,26 +39,25 @@ function PlatformLeaf({ leaf }: { leaf: any }) {
         const moveX = (Math.random() - 0.5) * 8; // -4 to +4 vw
         const moveY = (Math.random() - 0.5) * 6; // -3 to +3 %
         
-        setX((prev: number) => {
-          let next = prev + moveX;
-          if (next < 2) next = 2;
-          if (next > 98) next = 98;
-          return next;
-        });
+        let nextX = x.get() + moveX;
+        if (nextX < 2) nextX = 2;
+        if (nextX > 98) nextX = 98;
         
-        setY((prev: number) => {
-          let next = prev + moveY;
-          if (next < 5) next = 5;
-          if (next > 95) next = 95;
-          return next;
-        });
+        let nextY = y.get() + moveY;
+        if (nextY < 5) nextY = 5;
+        if (nextY > 95) nextY = 95;
         
-        setRotation((prev: number) => prev + (Math.random() * 240 - 120));
+        const nextRotation = rotation.get() + (Math.random() * 240 - 120);
+        const duration = 0.8 + Math.random() * 1.5;
+
+        animate(x, nextX, { duration, ease: "easeOut" });
+        animate(y, nextY, { duration, ease: "easeOut" });
+        animate(rotation, nextRotation, { duration, ease: "easeOut" });
       }
     }, 1000 + Math.random() * 4000); // Check every 1-5s
 
     return () => clearInterval(interval);
-  }, []);
+  }, [x, y, rotation]);
 
   return (
     <motion.div
@@ -65,16 +67,9 @@ function PlatformLeaf({ leaf }: { leaf: any }) {
         height: leaf.size * 0.7,
         backgroundColor: leaf.color,
         borderRadius: '50% 0 50% 0',
-      }}
-      initial={{ left: `${leaf.startX}vw`, top: `${leaf.startY}%`, rotate: rotation }}
-      animate={{
-        left: `${x}vw`,
-        top: `${y}%`,
+        left: leftValue,
+        top: topValue,
         rotate: rotation,
-      }}
-      transition={{
-        duration: 0.8 + Math.random() * 1.5,
-        ease: "easeOut"
       }}
     />
   );

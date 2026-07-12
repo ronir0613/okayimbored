@@ -6,7 +6,9 @@ export function useCatBehavior() {
   // Position is a percentage from 0 to 100 (left to right)
   const [catPosition, setCatPosition] = useState(60); 
   const [isVisible, setIsVisible] = useState(true);
+  const [catWalkDuration, setCatWalkDuration] = useState(0);
   const isTransitioningRef = useRef(false);
+  const positionRef = useRef(60);
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
@@ -23,7 +25,10 @@ export function useCatBehavior() {
         } else {
           setIsVisible(true);
           setCatState('idle');
-          setCatPosition(Math.random() * 80 + 10); // Appear somewhere random
+          setCatWalkDuration(0);
+          const newPos = Math.random() * 80 + 10;
+          setCatPosition(newPos); // Appear somewhere random
+          positionRef.current = newPos;
           timeout = setTimeout(pickNextAction, 2000);
         }
         return;
@@ -35,16 +40,31 @@ export function useCatBehavior() {
           // Walk Left
           setCatState('walking_left');
           const duration = 2000 + Math.random() * 4000;
+          setCatWalkDuration(duration);
+          // Calculate destination: move 4% per second
+          const moveAmount = (duration / 1000) * 4;
+          const newPos = Math.max(5, positionRef.current - moveAmount);
+          setCatPosition(newPos);
+          positionRef.current = newPos;
+
           timeout = setTimeout(() => {
             setCatState('idle');
+            setCatWalkDuration(0);
             pickNextAction();
           }, duration);
         } else if (rand < 0.6) {
           // Walk Right
           setCatState('walking_right');
           const duration = 2000 + Math.random() * 4000;
+          setCatWalkDuration(duration);
+          const moveAmount = (duration / 1000) * 4;
+          const newPos = Math.min(95, positionRef.current + moveAmount);
+          setCatPosition(newPos);
+          positionRef.current = newPos;
+
           timeout = setTimeout(() => {
             setCatState('idle');
+            setCatWalkDuration(0);
             pickNextAction();
           }, duration);
         } else if (rand < 0.8) {
@@ -75,6 +95,7 @@ export function useCatBehavior() {
       } else {
          // Fallback
          setCatState('idle');
+         setCatWalkDuration(0);
          timeout = setTimeout(pickNextAction, 2000);
       }
     };
@@ -84,20 +105,6 @@ export function useCatBehavior() {
     return () => clearTimeout(timeout);
   }, [catState, isVisible]);
 
-  // Handle position updates during walking
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (catState === 'walking_left') {
-      interval = setInterval(() => {
-        setCatPosition((prev) => Math.max(5, prev - 0.2));
-      }, 50);
-    } else if (catState === 'walking_right') {
-      interval = setInterval(() => {
-        setCatPosition((prev) => Math.min(95, prev + 0.2));
-      }, 50);
-    }
-    return () => clearInterval(interval);
-  }, [catState]);
-
-  return { catState, catPosition, isVisible };
+  return { catState, catPosition, isVisible, catWalkDuration };
 }
+

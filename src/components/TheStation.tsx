@@ -22,7 +22,7 @@ export function TheStation() {
   const [trainDirection, setTrainDirection] = useState<'left' | 'right'>('left');
   const [willStop, setWillStop] = useState<boolean>(true);
   
-  const { catState, catPosition, isVisible: isCatVisible } = useCatBehavior();
+  const { catState, catPosition, isVisible: isCatVisible, catWalkDuration } = useCatBehavior();
   const { lightsFlickering, birdLanded } = useMicroEvents();
 
   useEffect(() => {
@@ -444,8 +444,12 @@ export function TheStation() {
         {/* The Cat */}
         {isCatVisible && (
           <div 
-            className="absolute bottom-[20%] z-50 scale-125 origin-bottom transition-all duration-100"
-            style={{ left: `${catPosition}%` }}
+            className="absolute bottom-[20%] z-50 scale-125 origin-bottom transition-all"
+            style={{ 
+              left: `${catPosition}%`,
+              transitionDuration: `${catState.startsWith('walking') ? catWalkDuration : 100}ms`,
+              transitionTimingFunction: 'linear'
+            }}
           >
             <PixelCat state={catState} />
           </div>

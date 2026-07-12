@@ -104,12 +104,12 @@ export function PleasantRiver({ timeOfDay }: { timeOfDay: string }) {
             }}
             animate={{ 
               x: wave.direction > 0 ? ['-150vw', '150vw'] : ['150vw', '-150vw'],
-              width: [`${wave.width}%`, `${wave.width * 1.5}%`, `${wave.width}%`],
+              scaleX: [1, 1.5, 1],
               opacity: [wave.opacity * 0.5, wave.opacity, wave.opacity * 0.5],
             }}
             transition={{ 
               x: { duration: wave.duration, repeat: Infinity, ease: 'linear', delay: wave.delay },
-              width: { duration: wave.duration / 3, repeat: Infinity, ease: 'easeInOut', delay: wave.delay },
+              scaleX: { duration: wave.duration / 3, repeat: Infinity, ease: 'easeInOut', delay: wave.delay },
               opacity: { duration: wave.duration / 4, repeat: Infinity, ease: 'easeInOut', delay: wave.delay },
             }}
           />
