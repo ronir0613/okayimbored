@@ -71,6 +71,15 @@ export const Train: React.FC<TrainProps> = ({
           height: 16,
           overflow: 'hidden',
         }}>
+          {/* Background blocker to prevent river showing through transparent windows */}
+          <div style={{
+             position: 'absolute',
+             bottom: 2,
+             left: 0,
+             width: '100%',
+             height: 12,
+             backgroundColor: '#050810',
+          }} />
           <div
             style={{
               position: 'absolute',

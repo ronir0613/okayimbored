@@ -8,8 +8,9 @@ import { useMicroEvents } from './useMicroEvents';
 import { WindLeaves } from './WindLeaves';
 import { SkyDetails } from './SkyDetails';
 import { PlatformLeaves } from './PlatformLeaves';
+import { PleasantRiver } from './PleasantRiver';
 
-type StationState = 'WAITING_EMPTY' | 'ARRIVING' | 'STOPPED' | 'DEPARTING_EMPTY' | 'DEPARTING_BOARDED';
+type StationState = 'WAITING_EMPTY' | 'ARRIVING' | 'STOPPED' | 'DEPARTING_EMPTY' | 'DEPARTING_BOARDED' | 'PASSING_THROUGH';
 
 export function TheStation() {
   const [stationState, setStationState] = useState<StationState>('WAITING_EMPTY');
@@ -18,6 +19,8 @@ export function TheStation() {
   const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'night'>('night');
   const [trainTriggered, setTrainTriggered] = useState(0);
   const [currentTrainType, setCurrentTrainType] = useState<'TER' | 'TGV' | 'Industrial' | 'random'>('TER');
+  const [trainDirection, setTrainDirection] = useState<'left' | 'right'>('left');
+  const [willStop, setWillStop] = useState<boolean>(true);
   
   const { catState, catPosition, isVisible: isCatVisible } = useCatBehavior();
   const { lightsFlickering, birdLanded } = useMicroEvents();
@@ -55,7 +58,7 @@ export function TheStation() {
     switch (stationState) {
       case 'WAITING_EMPTY':
         timeout = setTimeout(() => {
-          setStationState('ARRIVING');
+          setStationState(willStop ? 'ARRIVING' : 'PASSING_THROUGH');
         }, 15000 + Math.random() * 20000); // Wait 15-35 seconds before arriving
         break;
 
@@ -74,11 +77,27 @@ export function TheStation() {
         }, 15000 + Math.random() * 10000);
         break;
 
+      case 'PASSING_THROUGH':
+        playTrainRumble();
+        timeout = setTimeout(() => {
+          const rand = Math.random();
+          setCurrentTrainType(rand > 0.95 ? 'Industrial' : (rand > 0.475 ? 'TGV' : 'TER'));
+          setTrainDirection(Math.random() > 0.5 ? 'left' : 'right');
+          setWillStop(Math.random() > 0.25); // 75% stop, 25% pass through
+          setStationState('WAITING_EMPTY');
+          setTrainTriggered(prev => prev + 1);
+          stopTrainRumble();
+        }, 12000); // Wait 12s to pass through completely
+        break;
+
       case 'DEPARTING_EMPTY':
         playTrainRumble();
         timeout = setTimeout(() => {
-          const isPassenger = Math.random() > 0.5; // 50/50 mix
-          setCurrentTrainType(isPassenger ? (Math.random() > 0.5 ? 'TER' : 'TGV') : 'Industrial');
+          const rand = Math.random();
+          // 5% chance Industrial, ~47.5% TGV, ~47.5% TER
+          setCurrentTrainType(rand > 0.95 ? 'Industrial' : (rand > 0.475 ? 'TGV' : 'TER'));
+          setTrainDirection(Math.random() > 0.5 ? 'left' : 'right');
+          setWillStop(Math.random() > 0.25); // 75% stop, 25% pass through
           setStationState('WAITING_EMPTY');
           setTrainTriggered(prev => prev + 1);
           stopTrainRumble();
@@ -172,7 +191,7 @@ export function TheStation() {
                  <div className="absolute inset-0 flex flex-wrap gap-1 sm:gap-1.5 p-2 justify-center content-start opacity-70 mt-4">
                    {[...Array(Math.floor(h * (isLean ? 2 : 1.2)))].map((_, wIdx) => {
                      const isLit = ((h * wIdx * 17.3 + h * 4.1 + wIdx * 2.3) % 1) > 0.4;
-                     const windowColor = timeOfDay === 'night' 
+                     const windowColor = (timeOfDay === 'night' || timeOfDay === 'evening')
                        ? (isLit ? 'bg-amber-100/60' : 'bg-transparent')
                        : (isLit ? 'bg-sky-200/20' : 'bg-black/30');
                      return (
@@ -185,6 +204,25 @@ export function TheStation() {
             })}
           </div>
 
+          {/* Mid-Distant City Skyline (New Layer) */}
+          <div className="absolute bottom-0 inset-x-0 w-full h-40 flex items-end justify-between px-2">
+            {[45, 25, 65, 35, 80, 55, 30, 70, 40, 90, 60, 20, 75, 45, 85, 35, 65, 25, 50, 70].map((h, i) => (
+               <div key={`build0.5-${i}`} className="w-6 sm:w-12 bg-[#1d2734] relative overflow-hidden" style={{ height: `${h}%` }}>
+                 <div className="absolute inset-0 flex flex-wrap gap-[1px] sm:gap-1 p-1 justify-center content-start opacity-60 mt-3">
+                   {[...Array(Math.floor(h * 1.5))].map((_, wIdx) => {
+                     const isLit = ((h * wIdx * 13.7 + h * 5.1 + wIdx * 3.3) % 1) > 0.45;
+                     const windowColor = (timeOfDay === 'night' || timeOfDay === 'evening')
+                       ? (isLit ? 'bg-amber-100/40' : 'bg-transparent')
+                       : (isLit ? 'bg-sky-100/10' : 'bg-black/20');
+                     return (
+                       <div key={`b0.5win-${wIdx}`} className={`w-1 h-1 sm:w-1.5 sm:h-2 ${windowColor}`}></div>
+                     );
+                   })}
+                 </div>
+               </div>
+            ))}
+          </div>
+
           {/* Distant City Skyline */}
           <div className="absolute bottom-0 left-0 right-0 h-2 bg-[#1a2530]"></div>
           <div className="absolute bottom-0 inset-x-0 w-full h-24 flex items-end justify-around px-4">
@@ -194,7 +232,7 @@ export function TheStation() {
                  <div className="absolute inset-0 flex flex-wrap gap-[2px] sm:gap-1 p-1 justify-center content-start opacity-50 mt-2">
                    {[...Array(Math.floor(h))].map((_, wIdx) => {
                      const isLit = ((h * wIdx * 11.7 + h * 3.3 + wIdx * 5.1) % 1) > 0.5;
-                     const windowColor = timeOfDay === 'night'
+                     const windowColor = (timeOfDay === 'night' || timeOfDay === 'evening')
                        ? (isLit ? 'bg-orange-100/50' : 'bg-transparent')
                        : (isLit ? 'bg-white/10' : 'bg-black/30');
                      return (
@@ -213,7 +251,7 @@ export function TheStation() {
                  <div className="absolute inset-0 flex flex-wrap gap-[2px] p-1 justify-center content-start opacity-40 mt-1">
                    {[...Array(Math.floor(h))].map((_, wIdx) => {
                      const isLit = ((h * wIdx * 19.1 + h * 7.7 + wIdx * 2.9) % 1) > 0.6;
-                     const windowColor = timeOfDay === 'night'
+                     const windowColor = (timeOfDay === 'night' || timeOfDay === 'evening')
                        ? (isLit ? 'bg-yellow-100/40' : 'bg-transparent')
                        : (isLit ? 'bg-white/10' : 'bg-black/30');
                      return (
@@ -225,6 +263,27 @@ export function TheStation() {
             ))}
           </div>
           
+          {/* Foreground City Skyline (New Layer, Darkest) */}
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#0a0f16]"></div>
+          <div className="absolute bottom-0 inset-x-0 w-full h-6 flex items-end justify-between px-1">
+            {[40, 20, 60, 30, 50, 80, 35, 95, 45, 25, 75, 55, 30, 85, 40, 20, 65, 35, 90, 50, 25, 70].map((h, i) => (
+               <div key={`build3-${i}`} className="w-8 sm:w-16 bg-[#0a0f16] relative overflow-hidden" style={{ height: `${h}%` }}>
+                 {/* Windows */}
+                 <div className="absolute inset-0 flex flex-wrap gap-[1px] p-[2px] justify-center content-start opacity-30 mt-1">
+                   {[...Array(Math.floor(h))].map((_, wIdx) => {
+                     const isLit = ((h * wIdx * 23.1 + h * 9.7 + wIdx * 4.9) % 1) > 0.65;
+                     const windowColor = (timeOfDay === 'night' || timeOfDay === 'evening')
+                       ? (isLit ? 'bg-orange-100/30' : 'bg-transparent')
+                       : (isLit ? 'bg-white/10' : 'bg-black/40');
+                     return (
+                       <div key={`b3win-${wIdx}`} className={`w-[2px] h-[2px] sm:w-1 sm:h-1 ${windowColor}`}></div>
+                     );
+                   })}
+                 </div>
+               </div>
+            ))}
+          </div>
+
           {/* Subtle Utility Poles & Power Lines */}
           <div className="absolute bottom-0 w-full h-16 flex justify-around opacity-40">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
@@ -255,48 +314,60 @@ export function TheStation() {
           </div>
         </div>
 
+        {/* Waterfront Promenade Streetlights */}
+        <div className="absolute bottom-0 inset-x-0 w-full h-2 pointer-events-none z-20 flex justify-between px-2 sm:px-4 opacity-80">
+          {[...Array(50)].map((_, i) => (
+            <div key={`sl-${i}`} className="relative flex flex-col items-center justify-end h-full">
+              {(timeOfDay === 'night' || timeOfDay === 'evening') && (
+                <div className="absolute top-[1px] w-[1.5px] h-[1.5px] bg-amber-200/90 shadow-[0_0_3px_rgba(251,191,36,0.9)] rounded-full"></div>
+              )}
+              <div className="w-[1px] h-[4px] bg-[#0a0f16]"></div>
+            </div>
+          ))}
+        </div>
+
         {/* Signal Lights */}
-        <div className="absolute bottom-2 inset-x-0 w-full h-2 pointer-events-none z-20 opacity-80">
-          <div className="absolute bottom-0 right-[20%] w-1 h-1 rounded-full bg-red-500/80 blur-[0.5px]"></div>
-          <div className="absolute bottom-0 left-[35%] w-1 h-1 rounded-full bg-orange-500/80 blur-[0.5px]"></div>
+        <div className="absolute bottom-1 inset-x-0 w-full h-2 pointer-events-none z-20 opacity-80">
+          <div className="absolute bottom-0 right-[20%] w-[3px] h-[3px] rounded-full bg-red-500/90 blur-[0.5px]"></div>
+          <div className="absolute bottom-0 left-[35%] w-[3px] h-[3px] rounded-full bg-orange-500/90 blur-[0.5px]"></div>
         </div>
       </div>
 
-      {/* Layer 2: Train (Middle ~40%) */}
+      {/* Layer 2: Train & River (Middle ~40%) */}
       <div className="relative w-full h-[40dvh] overflow-hidden flex items-end z-30 transition-colors duration-5000">
         
+        {/* River Background */}
+        <PleasantRiver timeOfDay={timeOfDay} />
+
         {/* Subtle background behind train for depth */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none mix-blend-multiply"></div>
 
         {/* The Train Layer */}
-        <div className="absolute bottom-[-224px] w-full h-[1024px] pointer-events-none flex justify-center">
+        <div className="absolute bottom-[-224px] w-full h-[1024px] pointer-events-none flex justify-center z-50">
            <motion.div
             key={trainTriggered}
-            initial={{ x: 'calc(50vw + 50%)' }}
+            initial={{ x: trainDirection === 'left' ? 'calc(50vw + 50%)' : 'calc(-50vw - 50%)' }}
              animate={{
-              x: stationState === 'WAITING_EMPTY' ? 'calc(50vw + 50%)' :
-                 stationState === 'ARRIVING' || stationState === 'STOPPED' ? '0vw' : 'calc(-50vw - 50%)',
-              y: stationState === 'STOPPED' ? [0, 0.5, 0] : 0
+              x: stationState === 'WAITING_EMPTY' ? (trainDirection === 'left' ? 'calc(50vw + 50%)' : 'calc(-50vw - 50%)') :
+                 stationState === 'ARRIVING' || stationState === 'STOPPED' ? '0vw' : 
+                 (trainDirection === 'left' ? 'calc(-50vw - 50%)' : 'calc(50vw + 50%)')
             }}
             transition={{ 
               x: {
                 duration: stationState === 'WAITING_EMPTY' ? 0 : 
+                          stationState === 'PASSING_THROUGH' ? 12 :
                           stationState === 'DEPARTING_EMPTY' || stationState === 'DEPARTING_BOARDED' ? 20 : 10, 
                 ease: stationState === 'ARRIVING' ? 'easeOut' : 
+                      stationState === 'PASSING_THROUGH' ? 'linear' :
                       stationState === 'WAITING_EMPTY' ? 'linear' : 'easeIn'
-              },
-              y: {
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut'
               }
             }}
             className="w-fit h-full pointer-events-auto"
           >
             <Train
               trainType={currentTrainType} 
-              direction="left"
-              speed={1}
+              direction={trainDirection}
+              speed={stationState === 'PASSING_THROUGH' ? 1.5 : 1}
               scale={32}
               stationary={true}
               showTracks={false}
