@@ -166,8 +166,14 @@ export const RadioRoom: React.FC = () => {
         if (currentChannel.freq === 87.7 && hasEcho('answered_telephone')) {
           messages.push("conversations never really end.");
         }
+        if (currentChannel.freq === 87.7 && hasEcho('ignored_phone')) {
+          messages.push("some calls go unanswered.");
+        }
         if (currentChannel.freq === 91.3 && hasEcho('tarot_the_moon')) {
           messages.push("the moon looks different tonight.");
+        }
+        if (currentChannel.freq === 94.2 && hasEcho('followed_cat')) {
+          messages.push("a visitor followed the cat today.");
         }
         
         if (messages && messages.length > 0) {

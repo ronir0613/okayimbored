@@ -49,18 +49,27 @@ export default function TelephoneRoom() {
 
     setMicrocopy(MICROCOPY[Math.floor(Math.random() * MICROCOPY.length)]);
 
-    // Start ring timer (reduced for testing: 3s to 8s)
-    if (Math.random() > 0.05) { // 95% chance it rings eventually
-      const delay = Math.floor(Math.random() * 5000) + 3000; // 3s to 8s
-      ringTimeoutRef.current = setTimeout(() => {
-        setRoomState('RINGING');
-        
-        // If not answered in 20s, miss the call
-        missedTimeoutRef.current = setTimeout(() => {
-          setRoomState('MISSED');
-          addEcho('ignored_telephone');
-        }, 20000);
-      }, delay);
+    if (hasEcho('answered_phone')) {
+      // User clicked the ringing phone in the entryway, so it should be ringing immediately
+      setRoomState('RINGING');
+      missedTimeoutRef.current = setTimeout(() => {
+        setRoomState('MISSED');
+        addEcho('ignored_telephone');
+      }, 20000);
+    } else {
+      // Start ring timer (reduced for testing: 3s to 8s)
+      if (Math.random() > 0.05) { // 95% chance it rings eventually
+        const delay = Math.floor(Math.random() * 5000) + 3000; // 3s to 8s
+        ringTimeoutRef.current = setTimeout(() => {
+          setRoomState('RINGING');
+          
+          // If not answered in 20s, miss the call
+          missedTimeoutRef.current = setTimeout(() => {
+            setRoomState('MISSED');
+            addEcho('ignored_telephone');
+          }, 20000);
+        }, delay);
+      }
     }
 
     return () => {
