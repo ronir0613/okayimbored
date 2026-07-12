@@ -60,32 +60,50 @@ export const Train: React.FC<TrainProps> = ({
           position: 'relative',
           width: wagon.length,
           height: 32,
-          backgroundImage: `url('/assets/train/trains.png')`,
-          backgroundPosition: `-${wagon.sprite.x}px -${wagon.sprite.y}px`,
-          transform: `scaleX(${wagonScaleX})`,
-          imageRendering: 'pixelated',
           flexShrink: 0,
-          cursor: (wagon.isBoardable && isInteractable) ? 'pointer' : 'default',
-          pointerEvents: (wagon.isBoardable && isInteractable) ? 'auto' : 'auto',
-          clipPath: 'inset(1px 0px 0px 0px)',
         }}
-        onClick={(wagon.isBoardable && isInteractable) ? onBoard : undefined}
-        className={(wagon.isBoardable && isInteractable) ? 'hover:brightness-125 transition-all' : ''}
       >
-        {wagon.tag && (
-          <div 
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          width: '100%',
+          height: 16,
+          overflow: 'hidden',
+        }}>
+          <div
             style={{
               position: 'absolute',
-              top: 0,
-              left: 0, 
-              width: wagon.tag.w,
-              height: wagon.tag.h,
+              bottom: 0,
+              left: 0,
+              width: '100%',
+              height: 32,
               backgroundImage: `url('/assets/train/trains.png')`,
-              backgroundPosition: `-${wagon.tag.x}px -${wagon.tag.y}px`,
+              backgroundPosition: `-${wagon.sprite.x}px -${wagon.sprite.y}px`,
+              transform: `scaleX(${wagonScaleX})`,
+              transformOrigin: 'bottom center',
               imageRendering: 'pixelated',
+              cursor: (wagon.isBoardable && isInteractable) ? 'pointer' : 'default',
+              pointerEvents: (wagon.isBoardable && isInteractable) ? 'auto' : 'auto',
             }}
+            onClick={(wagon.isBoardable && isInteractable) ? onBoard : undefined}
+            className={(wagon.isBoardable && isInteractable) ? 'hover:brightness-125 transition-all' : ''}
           />
-        )}
+          {wagon.tag && (
+            <div 
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0, 
+                width: wagon.tag.w,
+                height: wagon.tag.h,
+                backgroundImage: `url('/assets/train/trains.png')`,
+                backgroundPosition: `-${wagon.tag.x}px -${wagon.tag.y}px`,
+                imageRendering: 'pixelated',
+              }}
+            />
+          )}
+        </div>
       </div>
     );
   };
