@@ -6,30 +6,29 @@ import { useStationAudio } from './useStationAudio';
 
 type StationState = 'WAITING_EMPTY' | 'ARRIVING' | 'STOPPED' | 'DEPARTING_EMPTY' | 'DEPARTING_BOARDED';
 
-type StationCat = {
-  id: number;
-  state: CatState;
-  xPos: number; // in vw
-};
-
 export function TheStation() {
   const [stationState, setStationState] = useState<StationState>('WAITING_EMPTY');
-  const [cats, setCats] = useState<StationCat[]>([]);
   const { playWind, stopWind, playTrainRumble, initAudio } = useStationAudio();
   const [timeOfDayClass, setTimeOfDayClass] = useState('bg-[#0F2027]');
+  const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'night'>('night');
   const [trainTriggered, setTrainTriggered] = useState(0);
   const [currentTrainType, setCurrentTrainType] = useState<'TER' | 'TGV' | 'Industrial' | 'random'>('TER');
+  const [catState, setCatState] = useState<CatState>('idle');
 
   useEffect(() => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) {
-      setTimeOfDayClass('bg-gradient-to-b from-[#87CEEB] to-[#E0F6FF]');
+    if (hour >= 6 && hour < 12) {
+      setTimeOfDay('morning');
+      setTimeOfDayClass('bg-gradient-to-b from-sky-300 via-orange-100 to-amber-200');
     } else if (hour >= 12 && hour < 17) {
-      setTimeOfDayClass('bg-gradient-to-b from-[#4A90E2] to-[#B3D4FF]');
+      setTimeOfDay('afternoon');
+      setTimeOfDayClass('bg-gradient-to-b from-blue-400 to-blue-200');
     } else if (hour >= 17 && hour < 20) {
-      setTimeOfDayClass('bg-gradient-to-b from-[#FF7E5F] to-[#FEB47B]');
+      setTimeOfDay('evening');
+      setTimeOfDayClass('bg-gradient-to-b from-indigo-800 via-purple-500 to-orange-400');
     } else {
-      setTimeOfDayClass('bg-gradient-to-b from-[#0F2027] via-[#203A43] to-[#2C5364]');
+      setTimeOfDay('night');
+      setTimeOfDayClass('bg-gradient-to-b from-[#060B19] via-[#0D1832] to-[#17254A]');
     }
   }, []);
 
@@ -52,19 +51,6 @@ export function TheStation() {
         break;
 
       case 'STOPPED':
-        // Spawn a new cat
-        const newCat: StationCat = {
-          id: Date.now(),
-          state: 'walking_right',
-          xPos: 30 + Math.random() * 20, // Spawn somewhere in the middle-left
-        };
-        setCats(prev => [...prev, newCat]);
-        
-        // After 2 seconds, the new cat idles
-        setTimeout(() => {
-          setCats(prev => prev.map(c => c.id === newCat.id ? { ...c, state: 'idle' } : c));
-        }, 2000);
-
         // Train waits for 5-8 seconds
         timeout = setTimeout(() => {
           setStationState('DEPARTING_EMPTY');
@@ -79,14 +65,6 @@ export function TheStation() {
           setStationState('WAITING_EMPTY');
           setTrainTriggered(prev => prev + 1);
           stopWind();
-          
-          // Occasionally clean up old cats if there are too many (e.g. > 5)
-          setCats(prev => {
-            if (prev.length > 5) {
-              return prev.slice(prev.length - 5);
-            }
-            return prev;
-          });
         }, 20000); // Wait 20s to perfectly match the CSS depart animation duration
         break;
         
@@ -98,27 +76,6 @@ export function TheStation() {
     return () => clearTimeout(timeout);
   }, [stationState, playWind, stopWind, playTrainRumble]);
 
-  // Manage existing cats wandering
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (Math.random() > 0.7 && cats.length > 0) {
-        setCats(prev => prev.map(cat => {
-          if (Math.random() > 0.5) {
-            return {
-              ...cat,
-              state: Math.random() > 0.5 ? 'walking_right' : 'walking_left',
-            };
-          }
-          return cat;
-        }));
-
-        setTimeout(() => {
-          setCats(prev => prev.map(cat => ({ ...cat, state: 'idle' })));
-        }, 3000);
-      }
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [cats.length]);
 
   const handleBoardTrain = () => {
     if (stationState === 'STOPPED') {
@@ -132,16 +89,66 @@ export function TheStation() {
       {/* Noise overlay */}
       <div className="pointer-events-none fixed inset-0 bg-[url('/noise.png')] opacity-[0.03] z-50 mix-blend-overlay"></div>
 
-      {/* Layer 1: Atmosphere (Top ~40%) */}
-      <div className={`relative w-full h-[40dvh] transition-colors duration-[3000ms] ${timeOfDayClass} flex flex-col justify-end overflow-hidden shrink-0`}>
-        {/* Distant Atmosphere Elements */}
-        <div className="absolute inset-x-0 bottom-0 flex justify-around opacity-20 pointer-events-none">
-          <div className="w-16 h-64 border-l-4 border-r-4 border-t-4 rounded-t-lg border-white/20 flex flex-col items-center">
-            <div className="w-6 h-6 rounded-full bg-white/40 mt-2 shadow-[0_0_15px_rgba(255,255,255,0.8)]"></div>
+      {/* Layer 1: Atmosphere (Top ~30%) */}
+      <div className={`relative w-full h-[30dvh] transition-colors duration-[3000ms] ${timeOfDayClass} flex flex-col justify-end overflow-hidden shrink-0`}>
+        {/* Morning Mist */}
+        {timeOfDay === 'morning' && (
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/30 mix-blend-screen blur-md pointer-events-none"></div>
+        )}
+        
+        {/* Faint Stars for Night */}
+        {timeOfDay === 'night' && (
+          <div className="absolute inset-0 opacity-40">
+            {[...Array(20)].map((_, i) => (
+              <div 
+                key={i} 
+                className="absolute bg-white rounded-full" 
+                style={{
+                  top: `${Math.random() * 100}%`,
+                  left: `${Math.random() * 100}%`,
+                  width: `${Math.random() * 2}px`,
+                  height: `${Math.random() * 2}px`,
+                  opacity: Math.random() * 0.8 + 0.2
+                }}
+              />
+            ))}
           </div>
-          <div className="w-16 h-64 border-l-4 border-r-4 border-t-4 rounded-t-lg border-white/20 flex flex-col items-center">
-            <div className="w-6 h-6 rounded-full bg-white/40 mt-2 shadow-[0_0_15px_rgba(255,255,255,0.8)]"></div>
+        )}
+
+        {/* Subtle Distant Horizon */}
+        <div className="absolute bottom-0 inset-x-0 h-16 w-full flex items-end pointer-events-none z-10 opacity-60 mix-blend-multiply">
+          {/* Distant City Skyline */}
+          <div className="absolute bottom-0 left-0 right-0 h-2 bg-[#1a2530]"></div>
+          <div className="absolute bottom-0 inset-x-0 w-full h-16 flex items-end justify-around px-4">
+            {[20, 40, 25, 55, 30, 80, 45, 15, 60, 35, 20, 70, 50, 25, 40, 15].map((h, i) => (
+               <div key={`build1-${i}`} className="w-8 sm:w-16 bg-[#1a2530]" style={{ height: `${h}%` }}></div>
+            ))}
           </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#121824]"></div>
+          <div className="absolute bottom-0 inset-x-0 w-full h-10 flex items-end justify-around px-2">
+            {[30, 15, 45, 20, 35, 60, 25, 90, 50, 10, 80, 40, 20, 55, 30, 20, 45].map((h, i) => (
+               <div key={`build2-${i}`} className="w-10 sm:w-20 bg-[#121824]" style={{ height: `${h}%` }}></div>
+            ))}
+          </div>
+          
+          {/* Subtle Utility Poles & Power Lines */}
+          <div className="absolute bottom-0 w-full h-16 flex justify-around opacity-40">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="relative h-full w-[2px] bg-[#05080f]">
+                <div className="absolute top-2 -left-3 w-8 h-[1px] bg-[#05080f]"></div>
+                <div className="absolute top-4 -left-2 w-6 h-[1px] bg-[#05080f]"></div>
+              </div>
+            ))}
+            {/* Power lines connecting poles */}
+            <div className="absolute top-2 inset-x-0 h-[1px] bg-[#05080f] opacity-30 transform origin-left rotate-[0.5deg]"></div>
+            <div className="absolute top-4 inset-x-0 h-[1px] bg-[#05080f] opacity-30 transform origin-left -rotate-[0.5deg]"></div>
+          </div>
+        </div>
+
+        {/* Signal Lights */}
+        <div className="absolute bottom-2 inset-x-0 w-full h-2 pointer-events-none z-20 opacity-80">
+          <div className="absolute bottom-0 right-[20%] w-1 h-1 rounded-full bg-red-500/80 blur-[0.5px]"></div>
+          <div className="absolute bottom-0 left-[35%] w-1 h-1 rounded-full bg-orange-500/80 blur-[0.5px]"></div>
         </div>
       </div>
 
@@ -175,29 +182,37 @@ export function TheStation() {
               stationary={true}
               showTracks={false}
               onBoard={handleBoardTrain}
+              className="drop-shadow-[0_-5px_15px_rgba(255,165,0,0.15)] filter brightness-[0.85] contrast-[1.1] sepia-[0.1]"
               style={{ overflow: 'visible', width: 'fit-content' }}
             />
           </motion.div>
         </div>
       </div>
 
-      {/* Layer 3: Platform (Bottom ~20%) */}
-      <div className="relative w-full h-[20dvh] bg-[#111] border-t-4 border-white/10 shadow-[inset_0_20px_20px_rgba(0,0,0,0.5)] z-40">
-        {/* Paving details */}
-        <div className="absolute top-2 w-full h-4 bg-yellow-900/30 border-y border-yellow-700/20" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(0,0,0,0.2) 10px, rgba(0,0,0,0.2) 20px)' }}></div>
+      {/* Layer 3: Platform (Bottom ~30%) */}
+      <div className={`relative w-full h-[30dvh] transition-colors duration-[3000ms] shadow-[inset_0_30px_40px_rgba(0,0,0,0.8)] z-40 overflow-hidden ${
+        timeOfDay === 'morning' ? 'bg-[#1a1c23]' : 
+        timeOfDay === 'afternoon' ? 'bg-[#22242a]' : 
+        timeOfDay === 'evening' ? 'bg-[#151210]' : 
+        'bg-[#0a0a0c]'
+      }`}>
         
-        {/* Cats */}
-        {cats.map(cat => (
-          <motion.div
-            key={cat.id}
-            initial={{ x: `${cat.xPos - 10}vw`, opacity: 0 }}
-            animate={{ x: `${cat.xPos}vw`, opacity: 1 }}
-            transition={{ duration: 2, ease: 'linear' }}
-            className="absolute -top-12 z-50 w-24 h-24 pointer-events-none"
-          >
-            <PixelCat state={cat.state} />
-          </motion.div>
-        ))}
+        {/* Blending light spilling onto platform */}
+        <div className={`absolute top-0 inset-x-0 w-full h-full flex justify-around px-16 sm:px-32 pointer-events-none mix-blend-screen transition-opacity duration-[3000ms] opacity-40`}>
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className={`w-32 sm:w-64 h-[150%] bg-gradient-to-b to-transparent blur-3xl transform -skew-x-12 origin-top transition-colors duration-[3000ms] ${
+              timeOfDay === 'morning' ? 'from-amber-200/10' :
+              timeOfDay === 'afternoon' ? 'from-transparent' :
+              timeOfDay === 'evening' ? 'from-amber-500/15' :
+              'from-indigo-400/10'
+            }`}></div>
+          ))}
+        </div>
+
+        {/* The Cat */}
+        <div className="absolute bottom-[20%] right-[30%] sm:right-[40%] z-50 scale-125 origin-bottom">
+          <PixelCat state={catState} />
+        </div>
       </div>
 
       {/* Fade out ending transition for boarding */}
