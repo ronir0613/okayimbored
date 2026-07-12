@@ -5,6 +5,7 @@ import { PixelCat, type CatState } from './LivingCats/PixelCat';
 import { useStationAudio } from './useStationAudio';
 import { useCatBehavior } from './LivingCats/useCatBehavior';
 import { useMicroEvents } from './useMicroEvents';
+import { WindLeaves } from './WindLeaves';
 
 type StationState = 'WAITING_EMPTY' | 'ARRIVING' | 'STOPPED' | 'DEPARTING_EMPTY' | 'DEPARTING_BOARDED';
 
@@ -102,9 +103,12 @@ export function TheStation() {
     <div className="flex flex-col w-full h-[100dvh] overflow-hidden select-none bg-black">
       {/* Noise overlay */}
       <div className="pointer-events-none fixed inset-0 bg-[url('/noise.png')] opacity-[0.03] z-50 mix-blend-overlay"></div>
+      
+      {/* Wind Leaves Layer */}
+      <WindLeaves />
 
-      {/* Layer 1: Atmosphere (Top ~30%) */}
-      <div className={`relative w-full h-[30dvh] transition-colors duration-[5000ms] ${timeOfDayClass} flex flex-col justify-end overflow-hidden shrink-0`}>
+      {/* Layer 1: Atmosphere (Top ~40%) */}
+      <div className={`relative w-full h-[40dvh] transition-colors duration-[5000ms] ${timeOfDayClass} flex flex-col justify-end overflow-hidden shrink-0`}>
         
         {/* Animated Clouds */}
         <motion.div 
@@ -145,12 +149,12 @@ export function TheStation() {
         )}
 
         {/* Subtle Distant Horizon */}
-        <div className="absolute bottom-0 inset-x-0 h-48 w-full flex items-end pointer-events-none z-10 opacity-70 mix-blend-multiply transition-opacity duration-5000">
+        <div className="absolute bottom-0 inset-x-0 h-64 w-full flex items-end pointer-events-none z-10 opacity-80 mix-blend-multiply transition-opacity duration-5000">
           
-          {/* Layer 0: Skyscrapers */}
-          <div className="absolute bottom-0 inset-x-0 w-full h-32 flex items-end justify-between px-8">
+          {/* Layer 0: Huge Skyscrapers */}
+          <div className="absolute bottom-0 inset-x-0 w-full h-64 flex items-end justify-between px-8">
             {[60, 95, 75, 40, 100, 85, 55, 90, 70, 80].map((h, i) => (
-               <div key={`sky-${i}`} className="w-8 sm:w-16 bg-[#202b38] relative flex flex-col justify-end items-center" style={{ height: `${h}%` }}>
+               <div key={`sky-${i}`} className="w-12 sm:w-24 bg-[#202b38] relative flex flex-col justify-end items-center overflow-hidden" style={{ height: `${h}%` }}>
                  {/* Antennas on some skyscrapers */}
                  {i % 2 === 0 && (
                    <div className="absolute -top-6 w-[2px] h-6 bg-[#202b38]">
@@ -159,9 +163,9 @@ export function TheStation() {
                  )}
                  {/* Skyscraper windows */}
                  {timeOfDay === 'night' && (
-                   <div className="absolute inset-0 flex flex-wrap gap-1 p-1 overflow-hidden justify-center content-start opacity-40">
-                     {[...Array(Math.floor(h/5))].map((_, wIdx) => (
-                       <div key={`win-${wIdx}`} className={`w-1 h-2 ${Math.random() > 0.6 ? 'bg-amber-100/60' : 'bg-transparent'}`}></div>
+                   <div className="absolute inset-0 flex flex-wrap gap-1 sm:gap-1.5 p-2 justify-center content-start opacity-70 mt-4">
+                     {[...Array(Math.floor(h * 1.2))].map((_, wIdx) => (
+                       <div key={`win-${wIdx}`} className={`w-1 h-2 sm:w-2 sm:h-3 ${Math.random() > 0.4 ? 'bg-amber-100/60' : 'bg-transparent'}`}></div>
                      ))}
                    </div>
                  )}
@@ -171,22 +175,31 @@ export function TheStation() {
 
           {/* Distant City Skyline */}
           <div className="absolute bottom-0 left-0 right-0 h-2 bg-[#1a2530]"></div>
-          <div className="absolute bottom-0 inset-x-0 w-full h-16 flex items-end justify-around px-4">
+          <div className="absolute bottom-0 inset-x-0 w-full h-24 flex items-end justify-around px-4">
             {[20, 40, 25, 55, 30, 80, 45, 15, 60, 35, 20, 70, 50, 25, 40, 15].map((h, i) => (
-               <div key={`build1-${i}`} className="w-8 sm:w-16 bg-[#1a2530] relative" style={{ height: `${h}%` }}>
-                 {/* Occasional illuminated windows at night */}
-                 {timeOfDay === 'night' && Math.random() > 0.8 && (
-                   <div className="absolute top-[20%] left-[20%] w-[20%] h-[10%] bg-amber-100/40"></div>
+               <div key={`build1-${i}`} className="w-8 sm:w-16 bg-[#1a2530] relative overflow-hidden" style={{ height: `${h}%` }}>
+                 {/* Windows */}
+                 {timeOfDay === 'night' && (
+                   <div className="absolute inset-0 flex flex-wrap gap-[2px] sm:gap-1 p-1 justify-center content-start opacity-50 mt-2">
+                     {[...Array(Math.floor(h))].map((_, wIdx) => (
+                       <div key={`b1win-${wIdx}`} className={`w-1 h-1 sm:w-1.5 sm:h-2 ${Math.random() > 0.5 ? 'bg-orange-100/50' : 'bg-transparent'}`}></div>
+                     ))}
+                   </div>
                  )}
                </div>
             ))}
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#121824]"></div>
-          <div className="absolute bottom-0 inset-x-0 w-full h-10 flex items-end justify-around px-2">
+          <div className="absolute bottom-0 inset-x-0 w-full h-12 flex items-end justify-around px-2">
             {[30, 15, 45, 20, 35, 60, 25, 90, 50, 10, 80, 40, 20, 55, 30, 20, 45].map((h, i) => (
-               <div key={`build2-${i}`} className="w-10 sm:w-20 bg-[#121824] relative" style={{ height: `${h}%` }}>
-                 {timeOfDay === 'night' && Math.random() > 0.85 && (
-                   <div className="absolute top-[40%] right-[30%] w-[15%] h-[15%] bg-yellow-100/30"></div>
+               <div key={`build2-${i}`} className="w-10 sm:w-20 bg-[#121824] relative overflow-hidden" style={{ height: `${h}%` }}>
+                 {/* Windows */}
+                 {timeOfDay === 'night' && (
+                   <div className="absolute inset-0 flex flex-wrap gap-[2px] p-1 justify-center content-start opacity-40 mt-1">
+                     {[...Array(Math.floor(h))].map((_, wIdx) => (
+                       <div key={`b2win-${wIdx}`} className={`w-1 h-1 sm:w-[3px] sm:h-[3px] ${Math.random() > 0.6 ? 'bg-yellow-100/40' : 'bg-transparent'}`}></div>
+                     ))}
+                   </div>
                  )}
                </div>
             ))}
@@ -236,7 +249,7 @@ export function TheStation() {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none"></div>
 
         {/* The Train Layer */}
-        <div className="absolute bottom-[-96px] w-full h-[1024px] pointer-events-none flex justify-center">
+        <div className="absolute bottom-[-224px] w-full h-[1024px] pointer-events-none flex justify-center">
            <motion.div
             key={trainTriggered}
             initial={{ x: 'calc(50vw + 50%)' }}
@@ -276,17 +289,45 @@ export function TheStation() {
         </div>
       </div>
 
-      {/* Layer 3: Platform (Bottom ~30%) */}
-      <div className={`relative w-full h-[30dvh] transition-colors duration-[5000ms] shadow-[inset_0_30px_50px_rgba(0,0,0,0.9)] z-40 overflow-hidden ${
+      {/* Layer 3: Platform (Bottom ~20%) */}
+      <div className={`relative w-full h-[20dvh] transition-colors duration-[5000ms] shadow-[inset_0_30px_50px_rgba(0,0,0,0.9)] z-40 overflow-hidden ${
         timeOfDay === 'morning' ? 'bg-[#18191e]' : 
         timeOfDay === 'afternoon' ? 'bg-[#1e2025]' : 
         timeOfDay === 'evening' ? 'bg-[#12100f]' : 
         'bg-[#08080a]'
       }`}>
         
-        {/* Subtle noise and dirt textures on platform */}
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.04] mix-blend-overlay pointer-events-none"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
+        {/* Platform Edge Trim */}
+        <div className="absolute top-0 inset-x-0 w-full h-3 border-b-2 border-black/60 bg-white/10 pointer-events-none"></div>
+        <div className="absolute top-3 inset-x-0 w-full h-1 bg-black/40 pointer-events-none"></div>
+
+        {/* Concrete Block Pattern */}
+        <div 
+          className="absolute inset-0 opacity-[0.15] mix-blend-multiply pointer-events-none"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, #000 2px, transparent 2px),
+              linear-gradient(to bottom, #000 2px, transparent 2px)
+            `,
+            backgroundSize: '128px 64px'
+          }}
+        >
+          {/* Staggered vertical lines for brick effect */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `linear-gradient(to right, #000 2px, transparent 2px)`,
+              backgroundSize: '128px 64px',
+              backgroundPosition: '64px 32px'
+            }}
+          />
+        </div>
+
+        {/* Grunge and Weathering */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80 pointer-events-none"></div>
+        
+        {/* Enhanced noise texture */}
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.08] mix-blend-overlay pointer-events-none"></div>
 
         {/* Blending light spilling onto platform */}
         <div className={`absolute top-0 inset-x-0 w-full h-full flex justify-around px-16 sm:px-32 pointer-events-none mix-blend-screen transition-opacity duration-[5000ms] opacity-30 ${lightsFlickering ? 'opacity-10' : ''}`}>
