@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { Experience } from '../components/Experience';
+import { TheStation } from '../components/TheStation';
 
 const homepageSchema = {
   "@context": "https://schema.org",
@@ -29,6 +29,6 @@ const homepageSchema = {
 };
 ---
 
-<Layout schema={JSON.stringify(homepageSchema)}>
-	<Experience client:load />
+<Layout schema={JSON.stringify(homepageSchema)} hideWidgets={true} mainClass="w-full h-full p-0 m-0 overflow-hidden">
+	<TheStation client:load />
 </Layout>

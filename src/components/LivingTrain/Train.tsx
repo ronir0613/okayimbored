@@ -3,6 +3,7 @@ import type { TrainProps, WagonData } from './trainTypes';
 import { useTrainAnimation } from './trainAnimation';
 import { generateTracks } from './trainGenerator';
 
+
 export const Train: React.FC<TrainProps> = ({
   trainType = 'random',
   direction = 'left',
@@ -15,6 +16,7 @@ export const Train: React.FC<TrainProps> = ({
   containerWidth,
   className = '',
   style = {},
+  onBoard,
 }) => {
   const { containerRef, trainData } = useTrainAnimation({
     trainType,
@@ -62,7 +64,11 @@ export const Train: React.FC<TrainProps> = ({
           transform: `scaleX(${wagonScaleX})`,
           imageRendering: 'pixelated',
           flexShrink: 0,
+          cursor: wagon.isBoardable ? 'pointer' : 'default',
+          pointerEvents: wagon.isBoardable ? 'auto' : 'auto',
         }}
+        onClick={wagon.isBoardable ? onBoard : undefined}
+        className={wagon.isBoardable ? 'hover:brightness-125 transition-all' : ''}
       >
         {wagon.tag && (
           <div 
@@ -132,9 +138,10 @@ export const Train: React.FC<TrainProps> = ({
         ref={containerRef}
         className="living-train"
         style={{
-          position: 'absolute',
+          position: stationary ? 'relative' : 'absolute',
           top: 0,
           left: 0,
+          width: stationary ? trainData.length * scale : undefined,
           willChange: 'transform',
         }}
       >

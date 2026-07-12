@@ -25,8 +25,8 @@ export function generateIndustrialTrain(): TrainData {
   ];
 
   if (typeDiceThrow < 30) {
-    // container and flatbeds, 5-7 wagons, 30% chance of tag
-    const numWagons = randInt(3) + 5;
+    // container and flatbeds, 15-35 wagons, 30% chance of tag
+    const numWagons = randInt(20) + 15;
     for (let i = 0; i < numWagons; i++) {
       if (randInt(2) === 0) {
         wagons.push(createWagon(chooseOne(Sprites.FlatBedVariants)));
@@ -39,8 +39,8 @@ export function generateIndustrialTrain(): TrainData {
       }
     }
   } else if (typeDiceThrow < 60) {
-    // bins and flatbed, 3-6 wagons, 30-70 partition, 10% chance of tag on bins
-    const numWagons = randInt(4) + 3;
+    // bins and flatbed, 12-27 wagons, 30-70 partition, 10% chance of tag on bins
+    const numWagons = randInt(15) + 12;
     for (let i = 0; i < numWagons; i++) {
       if (randInt(10) < 4) {
         const bin = createWagon(chooseOne(Sprites.BinVariants));
@@ -53,8 +53,8 @@ export function generateIndustrialTrain(): TrainData {
       }
     }
   } else if (typeDiceThrow < 90) {
-    // container only, 3-7 wagons, 60% chance of tag
-    const numWagons = randInt(5) + 3;
+    // container only, 12-27 wagons, 60% chance of tag
+    const numWagons = randInt(15) + 12;
     for (let i = 0; i < numWagons; i++) {
       const container = createWagon(chooseOne(Sprites.ContainerVariants));
       if (randInt(10) < 6) {
@@ -63,8 +63,8 @@ export function generateIndustrialTrain(): TrainData {
       wagons.push(container);
     }
   } else {
-    // 12-20 bins, 10% chance of tag
-    const numWagons = randInt(9) + 12;
+    // 20-45 bins, 10% chance of tag
+    const numWagons = randInt(25) + 20;
     for (let i = 0; i < numWagons; i++) {
       const bin = createWagon(chooseOne(Sprites.BinVariants));
       if (randInt(10) === 0) {
@@ -82,9 +82,10 @@ function generateOneTER(typeDiceThrow: number): TrainData {
   const wagons: WagonData[] = [];
   wagons.push(createWagon(Sprites.TEREngineVariants[typeDiceThrow]));
 
-  const numCarriages = randInt(3) + 3;
+  const numCarriages = randInt(15) + 6; // 6 to 20 carriages for massive passenger trains
   for (let i = 0; i < numCarriages; i++) {
     const carriage = createWagon(Sprites.TERCarriageVariants[typeDiceThrow]);
+    carriage.isBoardable = true;
     if (randInt(100) < 15) {
       carriage.tag = chooseOne(Sprites.Tags48Wide);
     }
@@ -125,9 +126,11 @@ export function generateTGV(): TrainData {
   const wagons: WagonData[] = [];
   wagons.push(createWagon(Sprites.TGVEngine));
 
-  const numCarriages = randInt(4) + 5;
+  const numCarriages = randInt(10) + 8; // 8 to 17 carriages
   for (let i = 0; i < numCarriages; i++) {
-    wagons.push(createWagon(Sprites.TGVCarriage));
+    const carriage = createWagon(Sprites.TGVCarriage);
+    carriage.isBoardable = true;
+    wagons.push(carriage);
   }
 
   wagons.push(createWagon(Sprites.TGVEngine, true));
@@ -142,6 +145,8 @@ export function generateTrain(type: TrainType = 'random'): TrainData {
     if (dice < 45) {
       return generateTER();
     } else if (dice < 85) {
+      // In the context of The Station, we might want fewer industrial trains if we want the user to board.
+      // But we will allow industrial trains. They just won't be boardable.
       return generateIndustrialTrain();
     } else {
       return generateTGV();

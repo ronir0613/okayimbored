@@ -10,8 +10,9 @@ export interface SpriteCoords {
 export interface WagonData {
   sprite: SpriteCoords;
   tag?: SpriteCoords;
-  flip: boolean;
+  flip?: boolean;
   length: number;
+  isBoardable?: boolean;
 }
 
 export interface TrainData {
@@ -81,6 +82,7 @@ export interface TrainProps {
    */
   onArrival?: () => void;
   onDeparture?: () => void;
+  onBoard?: () => void;
 
   className?: string;
   style?: React.CSSProperties;

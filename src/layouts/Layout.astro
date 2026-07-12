@@ -17,6 +17,7 @@ interface Props {
   schema?: string;
   noindex?: boolean;
   mainClass?: string;
+  hideWidgets?: boolean;
 }
 
 const { 
@@ -27,7 +28,8 @@ const {
   type = 'website',
   schema,
   noindex = false,
-  mainClass = "w-full max-w-2xl mx-auto px-4 pt-8 pb-24 sm:px-6 sm:py-12 flex-1 flex flex-col items-center justify-center"
+  mainClass = "w-full max-w-2xl mx-auto px-4 pt-8 pb-24 sm:px-6 sm:py-12 flex-1 flex flex-col items-center justify-center",
+  hideWidgets = false,
 } = Astro.props;
 ---
 
@@ -82,12 +84,16 @@ const {
 		<main class={mainClass}>
 			<slot />
 		</main>
-		<RecordPlayer client:load transition:persist="record-player" />
-		<MicroWidget client:idle />
-		<LivingCats client:idle />
-		<Atmosphere client:load transition:persist="atmosphere" />
-		<CuriosityEvent client:load transition:persist="curiosity" />
-		<ShiftAmbience client:idle transition:persist="shift-ambience" />
+		{!hideWidgets && (
+			<>
+				<RecordPlayer client:load transition:persist="record-player" />
+				<MicroWidget client:idle />
+				<LivingCats client:idle />
+				<Atmosphere client:load transition:persist="atmosphere" />
+				<CuriosityEvent client:load transition:persist="curiosity" />
+				<ShiftAmbience client:idle transition:persist="shift-ambience" />
+			</>
+		)}
 
 		<script>
 			const updateSecretState = () => {
