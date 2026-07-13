@@ -253,15 +253,11 @@ export class AudioManager {
     }
 
     if (this.cricketGain) {
-      this.cricketGain.gain.setTargetAtTime(
-        timeOfDay === 'night' ? 0.002 : 0, now, T
-      );
+      this.cricketGain.gain.setTargetAtTime(0, now, T);
     }
 
     if (this.humGain) {
-      this.humGain.gain.setTargetAtTime(
-        (timeOfDay === 'night' || timeOfDay === 'evening') ? 0.01 : 0, now, T
-      );
+      this.humGain.gain.setTargetAtTime(0, now, T);
     }
   }
 
@@ -295,43 +291,9 @@ export class AudioManager {
     this.windNoiseFilter = filter;
     this.windNoiseGain = noiseGain;
 
-    // Cricket chirping (evening / night)
-    const cricketOsc = ctx.createOscillator();
-    cricketOsc.type = 'square';
-    cricketOsc.frequency.value = 4500;
+    // Cricket chirping has been removed because it sounded like an annoying beep
 
-    const lfo = ctx.createOscillator();
-    lfo.type = 'square';
-    lfo.frequency.value = 15;
-
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.value = 4500;
-    lfo.connect(lfoGain);
-    lfoGain.connect(cricketOsc.frequency);
-
-    const cricketGain = ctx.createGain();
-    cricketGain.gain.value = 0;
-    cricketOsc.connect(cricketGain);
-    cricketGain.connect(this.master);
-    cricketOsc.start();
-    lfo.start();
-
-    this.cricketOsc = cricketOsc;
-    this.cricketGain = cricketGain;
-
-    // Electrical hum (night / evening)
-    const humOsc = ctx.createOscillator();
-    humOsc.type = 'sine';
-    humOsc.frequency.value = 60;
-
-    const humGain = ctx.createGain();
-    humGain.gain.value = 0;
-    humOsc.connect(humGain);
-    humGain.connect(this.master);
-    humOsc.start();
-
-    this.humOsc = humOsc;
-    this.humGain = humGain;
+    // Electrical hum has been removed to prevent vibration sounds
 
     this.synthInitialized = true;
   }

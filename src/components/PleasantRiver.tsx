@@ -88,12 +88,21 @@ export function PleasantRiver({ timeOfDay }: { timeOfDay: string }) {
   return (
     <div className={`absolute inset-0 bg-gradient-to-b ${riverColor} overflow-hidden transition-colors duration-[5000ms] pointer-events-none`}>
       
-      {/* City skyline reflection at the horizon */}
-      <div className={`absolute top-0 inset-x-0 h-24 bg-gradient-to-b to-transparent transition-colors duration-[5000ms] opacity-50 ${
-        timeOfDay === 'night' ? 'from-indigo-500/10' :
-        timeOfDay === 'evening' ? 'from-orange-500/20' :
+      {/* City skyline and street glow reflection at the horizon */}
+      <div className={`absolute top-0 inset-x-0 h-32 bg-gradient-to-b to-transparent transition-colors duration-[5000ms] mix-blend-screen ${
+        timeOfDay === 'night' ? 'from-amber-400/10 via-amber-600/5' :
+        timeOfDay === 'evening' ? 'from-orange-400/15 via-orange-600/5' :
         'from-white/20'
       }`}></div>
+
+      {/* Shore streetlight reflections */}
+      {(timeOfDay === 'night' || timeOfDay === 'evening') && (
+        <div className="absolute top-0 inset-x-0 w-full h-12 flex justify-between px-2 sm:px-4 opacity-30 mix-blend-screen pointer-events-none">
+          {[...Array(50)].map((_, i) => (
+            <div key={`sl-ref-${i}`} className="w-[1.5px] h-full bg-gradient-to-b from-amber-200/50 to-transparent blur-[1px] transform -skew-x-12" />
+          ))}
+        </div>
+      )}
 
       {/* Background Noise for texture */}
       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.08] mix-blend-overlay"></div>
@@ -137,7 +146,8 @@ export function PleasantRiver({ timeOfDay }: { timeOfDay: string }) {
             const distanceOpacity = 0.4 + (boat.top / 100) * 0.4; // 0.4 to 0.8 opacity, slightly opaque
             
             const isEveningOrNight = timeOfDay === 'evening' || timeOfDay === 'night';
-            const windowColor = isEveningOrNight ? 'bg-amber-200/90 shadow-[0_0_8px_rgba(251,191,36,0.8)]' : 'bg-slate-900';
+            const windowColor = isEveningOrNight ? 'bg-amber-100 shadow-[0_0_12px_rgba(251,191,36,1)]' : 'bg-slate-900';
+            const cabinGlow = isEveningOrNight ? <div className="absolute inset-0 bg-amber-300/40 blur-[6px] rounded-full mix-blend-screen pointer-events-none" /> : null;
 
             return (
               <motion.div
@@ -163,11 +173,13 @@ export function PleasantRiver({ timeOfDay }: { timeOfDay: string }) {
                        </div>
                        {/* Multiple Decks */}
                        <div className="absolute bottom-5 left-4 w-40 h-4 bg-white">
+                         {cabinGlow}
                          <div className="absolute bottom-0 left-2 w-32 h-2 bg-slate-900/80 flex justify-between px-1">
                            {[...Array(6)].map((_, i) => <div key={i} className={`w-4 h-full ${windowColor}`}></div>)}
                          </div>
                        </div>
                        <div className="absolute bottom-9 left-12 w-24 h-3 bg-white">
+                         {cabinGlow}
                          <div className="absolute bottom-0 left-2 w-16 h-2 bg-slate-900/80 flex justify-evenly px-1">
                            {[...Array(3)].map((_, i) => <div key={i} className={`w-3 h-full ${windowColor}`}></div>)}
                          </div>
@@ -190,6 +202,7 @@ export function PleasantRiver({ timeOfDay }: { timeOfDay: string }) {
                        </div>
                        {/* Cabin */}
                        <div className="absolute bottom-4 left-4 w-16 h-3 bg-white">
+                         {cabinGlow}
                          {/* Windows */}
                          <div className="absolute bottom-0 left-1 w-12 h-2 bg-slate-900/80 flex justify-evenly">
                            <div className={`w-2 h-full ${windowColor}`}></div>
@@ -215,8 +228,9 @@ export function PleasantRiver({ timeOfDay }: { timeOfDay: string }) {
                           <div className="absolute bottom-[1px] left-0 w-full h-[1px] bg-red-500"></div>
                        </div>
                        {/* Windshield / Cabin */}
-                       <div className="absolute bottom-2 left-2 w-6 h-2 bg-cyan-900/80 rounded-tr-md rounded-tl-sm">
-                         {isEveningOrNight && <div className="absolute bottom-0 right-1 w-1 h-1 bg-amber-200/90 rounded-full shadow-[0_0_4px_rgba(251,191,36,0.8)]"></div>}
+                       <div className="absolute bottom-2 left-2 w-6 h-2 bg-cyan-900/80 rounded-tr-md rounded-tl-sm relative">
+                         {isEveningOrNight && <div className="absolute inset-0 bg-amber-300/50 blur-[4px] mix-blend-screen pointer-events-none" />}
+                         {isEveningOrNight && <div className="absolute bottom-0 right-1 w-1.5 h-1.5 bg-amber-100 rounded-full shadow-[0_0_8px_rgba(251,191,36,1)]"></div>}
                        </div>
                        
                        {/* Wake / Splash */}

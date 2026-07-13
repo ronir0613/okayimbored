@@ -158,11 +158,18 @@ export function useTrainStation(): TrainStationState {
     audioRef.current?.setTimeOfDay(tod);
   }, []);
 
-  // ── Auto-init on any user interaction ──────────────────────────────────────
+  // ── Auto-init immediately and handle AudioContext resume ───────────────────
 
   useEffect(() => {
+    // Start the station simulation right away
+    initStation();
+
+    // Browsers block audio autoplay until user interaction.
+    // We try to resume the audio context whenever the user finally interacts.
     const events = ['click', 'keydown', 'pointerdown', 'touchstart', 'scroll'] as const;
-    const handler = () => initStation();
+    const handler = () => {
+      audioRef.current?.resume();
+    };
     events.forEach(e => window.addEventListener(e, handler, { once: true, passive: true }));
     return () => events.forEach(e => window.removeEventListener(e, handler));
   }, [initStation]);

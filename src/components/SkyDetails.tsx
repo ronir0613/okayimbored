@@ -32,6 +32,30 @@ export function SkyDetails({ timeOfDay }: { timeOfDay: string }) {
     }));
   }, []);
 
+  const stars = useMemo(() => {
+    return Array.from({ length: 200 }).map((_, i) => ({
+      id: i,
+      x: Math.random() * 100, // %
+      y: Math.random() * 50, // restrict to top 50%
+      size: Math.random() * 2 + 0.5,
+      opacity: 0.1 + Math.random() * 0.8,
+      twinkleDuration: 2 + Math.random() * 4,
+      twinkleDelay: Math.random() * 5,
+    }));
+  }, []);
+
+  const planes = useMemo(() => {
+    return Array.from({ length: 1 }).map((_, i) => ({
+      id: i,
+      startY: 5 + Math.random() * 25, // restrict to top 30%
+      duration: 150 + Math.random() * 100,
+      delay: Math.random() * 10, 
+      repeatDelay: 30 + Math.random() * 60,
+      scale: 0.3 + Math.random() * 0.4,
+      direction: Math.random() > 0.5 ? 1 : -1,
+    }));
+  }, []);
+
   const isNight = timeOfDay === 'night';
   const isEvening = timeOfDay === 'evening';
   const isMorning = timeOfDay === 'morning';
@@ -39,7 +63,36 @@ export function SkyDetails({ timeOfDay }: { timeOfDay: string }) {
   if (!isMounted) return null;
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-[5]">
+    <div 
+      className="absolute inset-0 overflow-hidden pointer-events-none z-[5]"
+      style={{ maskImage: 'linear-gradient(to bottom, black 40%, transparent 80%)', WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 80%)' }}
+    >
+      {/* Stars */}
+      {isNight && (
+        <div className="absolute inset-0">
+          {stars.map(star => (
+            <motion.div
+              key={`star-${star.id}`}
+              className="absolute bg-white rounded-full"
+              style={{
+                left: `${star.x}%`,
+                top: `${star.y}%`,
+                width: `${star.size}px`,
+                height: `${star.size}px`,
+              }}
+              initial={{ opacity: star.opacity }}
+              animate={{ opacity: [star.opacity * 0.2, star.opacity, star.opacity * 0.2] }}
+              transition={{
+                duration: star.twinkleDuration,
+                delay: star.twinkleDelay,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Airplane Trails */}
       {trails.map(trail => (
         <motion.div
@@ -86,6 +139,38 @@ export function SkyDetails({ timeOfDay }: { timeOfDay: string }) {
           </div>
         </motion.div>
       ))}
+
+      {/* Night Planes */}
+      {isNight && planes.map(plane => {
+        const initialX = plane.direction === 1 ? '-10vw' : '110vw';
+        const targetX = plane.direction === 1 ? '110vw' : '-10vw';
+        
+        return (
+          <motion.div
+            key={`plane-${plane.id}`}
+            className="absolute flex items-center justify-center gap-6"
+            style={{ top: `${plane.startY}%` }}
+            initial={{ x: initialX, scale: plane.scale }}
+            animate={{ x: targetX, scale: plane.scale }}
+            transition={{ 
+              x: { duration: plane.duration, delay: plane.delay, repeat: Infinity, ease: 'linear', repeatDelay: plane.repeatDelay }
+            }}
+          >
+            {/* Left Wing Light (Red) */}
+            <motion.div
+              className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,1)]"
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+            />
+            {/* Right Wing Light (Green) */}
+            <motion.div
+              className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,1)]"
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ duration: 1.2, delay: 0.1, repeat: Infinity, ease: 'linear' }}
+            />
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
