@@ -17,20 +17,19 @@ import {
 // ─── Easing Curves ────────────────────────────────────────────────────────────
 
 /**
- * Braking: starts at approach speed, rapidly decelerates, glides to a stop.
- * The curve is heavily weighted toward the beginning (fast → slow).
+ * Braking: a gentler ease-out to make the train enter slower and less abruptly.
  */
-const EASE_BRAKING: [number, number, number, number] = [0.05, 0.9, 0.15, 1.0];
+const EASE_BRAKING: [number, number, number, number] = [0.33, 1.0, 0.68, 1.0];
 
 /**
- * Departure (commuter): classic ease-in — smooth acceleration.
+ * Departure (commuter): slower start, gradually picking up speed.
  */
-const EASE_DEPART_COMMUTER: [number, number, number, number] = [0.4, 0.0, 0.8, 0.2];
+const EASE_DEPART_COMMUTER: [number, number, number, number] = [0.6, 0.0, 0.8, 0.0];
 
 /**
- * Departure (bullet): smoother, more powerful acceleration.
+ * Departure (bullet): smoother, slow start, gradually faster.
  */
-const EASE_DEPART_BULLET: [number, number, number, number] = [0.3, 0.0, 0.7, 0.1];
+const EASE_DEPART_BULLET: [number, number, number, number] = [0.5, 0.0, 0.7, 0.0];
 
 // ─── TrainScheduler ───────────────────────────────────────────────────────────
 
