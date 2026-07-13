@@ -92,11 +92,10 @@ export const Train: React.FC<TrainProps> = ({
               transform: `scaleX(${wagonScaleX})`,
               transformOrigin: 'bottom center',
               imageRendering: 'pixelated',
-              cursor: (wagon.isBoardable && isInteractable) ? 'pointer' : 'default',
-              pointerEvents: (wagon.isBoardable && isInteractable) ? 'auto' : 'auto',
+              cursor: 'default',
+              pointerEvents: (wagon.isBoardable && isInteractable) ? 'auto' : 'none',
             }}
             onClick={(wagon.isBoardable && isInteractable) ? onBoard : undefined}
-            className={(wagon.isBoardable && isInteractable) ? 'hover:brightness-125 transition-all' : ''}
           />
           {wagon.tag && (
             <div 

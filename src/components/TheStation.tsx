@@ -22,7 +22,7 @@ export function TheStation() {
   const [trainDirection, setTrainDirection] = useState<'left' | 'right'>('left');
   const [willStop, setWillStop] = useState<boolean>(true);
   
-  const { catState, catPosition, isVisible: isCatVisible, catWalkDuration } = useCatBehavior();
+  const { catState, catPosition, isVisible: isCatVisible, catWalkDuration, isBoarding, catY } = useCatBehavior(stationState);
   const { lightsFlickering, birdLanded } = useMicroEvents();
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export function TheStation() {
         timeout = setTimeout(() => {
           setStationState('STOPPED');
           stopTrainRumble();
-        }, 5000);
+        }, 10000);
         break;
 
       case 'STOPPED':
@@ -394,7 +394,7 @@ export function TheStation() {
         <div className="absolute top-3 inset-x-0 w-full h-1 bg-black/40 pointer-events-none z-30"></div>
 
         {/* Fallen Petals on the Platform */}
-        <PlatformLeaves />
+        <PlatformLeaves stationState={stationState} trainDirection={trainDirection} />
 
         {/* Concrete Block Pattern */}
         <div 
@@ -444,9 +444,12 @@ export function TheStation() {
         {/* The Cat */}
         {isCatVisible && (
           <div 
-            className="absolute bottom-[20%] z-50 scale-125 origin-bottom transition-all"
+            className="absolute z-50 origin-bottom transition-all"
             style={{ 
+              bottom: `calc(20% + ${catY}%)`,
               left: `${catPosition}%`,
+              transform: `scale(${isBoarding ? 1.25 - (catY / 100) : 1.25})`,
+              opacity: isBoarding && catY > 20 ? 1 - ((catY - 20) / 10) : 1,
               transitionDuration: `${catState.startsWith('walking') ? catWalkDuration : 100}ms`,
               transitionTimingFunction: 'linear'
             }}
