@@ -25,6 +25,48 @@ export function TheStation() {
   const { catState, catPosition, isVisible: isCatVisible, catWalkDuration, isBoarding, catY } = useCatBehavior(stationState);
   const { lightsFlickering, birdLanded } = useMicroEvents();
 
+  const getBuildingColor = (layerIndex: number) => {
+    switch (timeOfDay) {
+      case 'morning':
+        return {
+          '-1': 'bg-[#8fb8d9]', 
+          '0': 'bg-[#7a9bb8]', 
+          '0.5': 'bg-[#678299]', 
+          '1': 'bg-[#546b7a]', 
+          '2': 'bg-[#40525c]', 
+          '3': 'bg-[#2c383d]'
+        }[layerIndex];
+      case 'afternoon':
+        return {
+          '-1': 'bg-[#6fa0cc]', 
+          '0': 'bg-[#5c85aa]', 
+          '0.5': 'bg-[#4a6b8a]', 
+          '1': 'bg-[#375269]', 
+          '2': 'bg-[#273a4a]', 
+          '3': 'bg-[#17222b]'
+        }[layerIndex];
+      case 'evening':
+        return {
+          '-1': 'bg-[#4c3b52]', 
+          '0': 'bg-[#3d2f42]', 
+          '0.5': 'bg-[#302533]', 
+          '1': 'bg-[#221a24]', 
+          '2': 'bg-[#161117]', 
+          '3': 'bg-[#0a080a]'
+        }[layerIndex];
+      case 'night':
+      default:
+        return {
+          '-1': 'bg-[#253242]', 
+          '0': 'bg-[#202b38]', 
+          '0.5': 'bg-[#1d2734]', 
+          '1': 'bg-[#1a2530]', 
+          '2': 'bg-[#121824]', 
+          '3': 'bg-[#0a0f16]'
+        }[layerIndex];
+    }
+  };
+
   useEffect(() => {
     const updateTime = () => {
       const hour = new Date().getHours();
@@ -173,17 +215,36 @@ export function TheStation() {
         )}
 
         {/* Subtle Distant Horizon */}
-        <div className="absolute bottom-0 inset-x-0 h-64 w-full flex items-end pointer-events-none z-10 opacity-80 mix-blend-multiply transition-opacity duration-5000">
+        <div className="absolute bottom-0 inset-x-0 h-64 w-full flex items-end pointer-events-none z-10 opacity-90 transition-opacity duration-5000">
           
+          {/* Layer -1: Ultra-Distant Megastructures */}
+          <div className="absolute bottom-0 inset-x-0 w-full h-[22rem] flex items-end justify-between px-2 opacity-60">
+            {[45, 80, 35, 95, 50, 75, 40, 100, 65, 85, 30, 90, 55, 70, 25, 80, 45, 95, 35, 65, 40].map((h, i) => (
+               <div key={`ultra-${i}`} className={`w-10 sm:w-24 ${getBuildingColor(-1)} relative overflow-hidden transition-colors duration-[5000ms]`} style={{ height: `${h}%` }}>
+                 <div className="absolute inset-0 flex flex-wrap gap-1 p-2 justify-center content-start opacity-30 mt-6">
+                   {[...Array(Math.floor(h * 1.5))].map((_, wIdx) => {
+                     const isLit = ((h * wIdx * 27.1 + i * 5.3) % 1) > 0.4;
+                     const windowColor = (timeOfDay === 'night' || timeOfDay === 'evening')
+                       ? (isLit ? 'bg-amber-100/30' : 'bg-transparent')
+                       : (isLit ? 'bg-sky-200/10' : 'bg-black/10');
+                     return (
+                       <div key={`uw-${wIdx}`} className={`w-1 h-2 sm:w-2 sm:h-3 ${windowColor}`}></div>
+                     );
+                   })}
+                 </div>
+               </div>
+            ))}
+          </div>
+
           {/* Layer 0: Huge Skyscrapers */}
           <div className="absolute bottom-0 inset-x-0 w-full h-64 flex items-end justify-between px-8">
             {[60, 95, 75, 40, 100, 85, 55, 90, 70, 80].map((h, i) => {
                const isLean = h >= 95;
                return (
-               <div key={`sky-${i}`} className={`${isLean ? 'w-6 sm:w-10' : 'w-12 sm:w-24'} bg-[#202b38] relative flex flex-col justify-end items-center overflow-hidden`} style={{ height: `${h}%` }}>
+               <div key={`sky-${i}`} className={`${isLean ? 'w-6 sm:w-10' : 'w-12 sm:w-24'} ${getBuildingColor(0)} relative flex flex-col justify-end items-center overflow-hidden transition-colors duration-[5000ms]`} style={{ height: `${h}%` }}>
                  {/* Antennas on some skyscrapers */}
                  {i % 2 === 0 && (
-                   <div className="absolute -top-6 w-[2px] h-6 bg-[#202b38]">
+                   <div className={`absolute -top-6 w-[2px] h-6 ${getBuildingColor(0)} transition-colors duration-[5000ms]`}>
                       <div className="absolute top-0 -left-[1px] w-1 h-1 bg-red-500/80 rounded-full animate-pulse"></div>
                    </div>
                  )}
@@ -207,7 +268,7 @@ export function TheStation() {
           {/* Mid-Distant City Skyline (New Layer) */}
           <div className="absolute bottom-0 inset-x-0 w-full h-40 flex items-end justify-between px-2">
             {[45, 25, 65, 35, 80, 55, 30, 70, 40, 90, 60, 20, 75, 45, 85, 35, 65, 25, 50, 70].map((h, i) => (
-               <div key={`build0.5-${i}`} className="w-6 sm:w-12 bg-[#1d2734] relative overflow-hidden" style={{ height: `${h}%` }}>
+               <div key={`build0.5-${i}`} className={`w-6 sm:w-12 ${getBuildingColor(0.5)} relative overflow-hidden transition-colors duration-[5000ms]`} style={{ height: `${h}%` }}>
                  <div className="absolute inset-0 flex flex-wrap gap-[1px] sm:gap-1 p-1 justify-center content-start opacity-60 mt-3">
                    {[...Array(Math.floor(h * 1.5))].map((_, wIdx) => {
                      const isLit = ((h * wIdx * 13.7 + h * 5.1 + wIdx * 3.3) % 1) > 0.45;
@@ -224,10 +285,10 @@ export function TheStation() {
           </div>
 
           {/* Distant City Skyline */}
-          <div className="absolute bottom-0 left-0 right-0 h-2 bg-[#1a2530]"></div>
+          <div className={`absolute bottom-0 left-0 right-0 h-2 ${getBuildingColor(1)} transition-colors duration-[5000ms]`}></div>
           <div className="absolute bottom-0 inset-x-0 w-full h-24 flex items-end justify-around px-4">
             {[20, 40, 25, 55, 30, 80, 45, 15, 60, 35, 20, 70, 50, 25, 40, 15].map((h, i) => (
-               <div key={`build1-${i}`} className="w-8 sm:w-16 bg-[#1a2530] relative overflow-hidden" style={{ height: `${h}%` }}>
+               <div key={`build1-${i}`} className={`w-8 sm:w-16 ${getBuildingColor(1)} relative overflow-hidden transition-colors duration-[5000ms]`} style={{ height: `${h}%` }}>
                  {/* Windows */}
                  <div className="absolute inset-0 flex flex-wrap gap-[2px] sm:gap-1 p-1 justify-center content-start opacity-50 mt-2">
                    {[...Array(Math.floor(h))].map((_, wIdx) => {
@@ -243,10 +304,10 @@ export function TheStation() {
                </div>
             ))}
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#121824]"></div>
+          <div className={`absolute bottom-0 left-0 right-0 h-1 ${getBuildingColor(2)} transition-colors duration-[5000ms]`}></div>
           <div className="absolute bottom-0 inset-x-0 w-full h-12 flex items-end justify-around px-2">
             {[30, 15, 45, 20, 35, 60, 25, 90, 50, 10, 80, 40, 20, 55, 30, 20, 45].map((h, i) => (
-               <div key={`build2-${i}`} className="w-10 sm:w-20 bg-[#121824] relative overflow-hidden" style={{ height: `${h}%` }}>
+               <div key={`build2-${i}`} className={`w-10 sm:w-20 ${getBuildingColor(2)} relative overflow-hidden transition-colors duration-[5000ms]`} style={{ height: `${h}%` }}>
                  {/* Windows */}
                  <div className="absolute inset-0 flex flex-wrap gap-[2px] p-1 justify-center content-start opacity-40 mt-1">
                    {[...Array(Math.floor(h))].map((_, wIdx) => {
@@ -264,10 +325,10 @@ export function TheStation() {
           </div>
           
           {/* Foreground City Skyline (New Layer, Darkest) */}
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#0a0f16]"></div>
+          <div className={`absolute bottom-0 left-0 right-0 h-1 ${getBuildingColor(3)} transition-colors duration-[5000ms]`}></div>
           <div className="absolute bottom-0 inset-x-0 w-full h-6 flex items-end justify-between px-1">
             {[40, 20, 60, 30, 50, 80, 35, 95, 45, 25, 75, 55, 30, 85, 40, 20, 65, 35, 90, 50, 25, 70].map((h, i) => (
-               <div key={`build3-${i}`} className="w-8 sm:w-16 bg-[#0a0f16] relative overflow-hidden" style={{ height: `${h}%` }}>
+               <div key={`build3-${i}`} className={`w-8 sm:w-16 ${getBuildingColor(3)} relative overflow-hidden transition-colors duration-[5000ms]`} style={{ height: `${h}%` }}>
                  {/* Windows */}
                  <div className="absolute inset-0 flex flex-wrap gap-[1px] p-[2px] justify-center content-start opacity-30 mt-1">
                    {[...Array(Math.floor(h))].map((_, wIdx) => {
@@ -435,6 +496,36 @@ export function TheStation() {
             }`}></div>
           ))}
         </div>
+
+        {/* Fluorescent light effects (Evening specific) */}
+        <AnimatePresence>
+          {timeOfDay === 'evening' && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 3 }}
+              className={`absolute top-0 inset-x-0 w-full h-full flex justify-around px-20 sm:px-40 pointer-events-none mix-blend-screen opacity-60 ${lightsFlickering ? 'opacity-10' : ''}`}
+            >
+              {[1, 2, 3].map(i => (
+                <div key={`fluor-${i}`} className="relative w-24 sm:w-48 h-[150%]">
+                   {/* Buzzing fluorescent spill */}
+                   <motion.div 
+                     className="absolute inset-0 bg-gradient-to-b from-cyan-300/20 via-emerald-200/5 to-transparent blur-2xl transform -skew-x-12 origin-top"
+                     animate={{ opacity: [0.8, 1, 0.7, 0.9, 1, 0.6, 1] }}
+                     transition={{ duration: 4 + i, repeat: Infinity, repeatType: "mirror" }}
+                   />
+                   {/* Bright core reflection on the ground */}
+                   <motion.div 
+                     className="absolute bottom-[40%] left-1/2 -translate-x-1/2 w-32 h-6 bg-cyan-100/10 blur-xl rounded-[100%]"
+                     animate={{ opacity: [0.5, 0.8, 0.4, 0.9, 0.7] }}
+                     transition={{ duration: 2 + (i * 0.5), repeat: Infinity, repeatType: "mirror" }}
+                   />
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         {/* Bird micro event */}
         {birdLanded && timeOfDay !== 'night' && (
