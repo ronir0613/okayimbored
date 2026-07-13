@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import type { TrainProps, WagonData } from './trainTypes';
-import { useTrainAnimation } from './trainAnimation';
-import { generateTracks } from './trainGenerator';
+import { generateTracks, generateTrain } from './trainGenerator';
 
 
 export const Train: React.FC<TrainProps> = ({
@@ -19,17 +18,18 @@ export const Train: React.FC<TrainProps> = ({
   onBoard,
   isInteractable = true,
 }) => {
-  const { containerRef, trainData } = useTrainAnimation({
-    trainType,
-    direction,
-    speedMultiplier: speed,
-    scale,
-    loop,
-    autoDepart,
-    stationary,
-  });
+  const [trainData, setTrainData] = useState(() => generateTrain(trainType));
+
+  useEffect(() => {
+    setTrainData(generateTrain(trainType));
+  }, [trainType]);
 
   const [tracks, setTracks] = useState<any[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (showTracks) {
@@ -74,7 +74,7 @@ export const Train: React.FC<TrainProps> = ({
           {/* Background blocker to prevent river showing through transparent windows */}
           <div style={{
              position: 'absolute',
-             bottom: 2,
+             bottom: 12,
              left: 0,
              width: '100%',
              height: 12,
@@ -123,7 +123,7 @@ export const Train: React.FC<TrainProps> = ({
         position: stationary ? 'relative' : 'absolute',
         top: 0,
         left: 0,
-        width: stationary ? (containerWidth || '100%') : '100%',
+        width: stationary ? (containerWidth || 'max-content') : '100%',
         height: 32 * scale,
         pointerEvents: 'none',
         zIndex: 10,
@@ -132,7 +132,7 @@ export const Train: React.FC<TrainProps> = ({
       }}
     >
       {/* Static Tracks Layer */}
-      {showTracks && (
+      {isMounted && showTracks && (
         <div 
           className="living-train-tracks"
           style={{
@@ -161,29 +161,30 @@ export const Train: React.FC<TrainProps> = ({
         </div>
       )}
 
-      {/* Moving Train Layer */}
-      <div 
-        ref={containerRef}
-        className="living-train"
-        style={{
-          position: stationary ? 'relative' : 'absolute',
-          top: 0,
-          left: 0,
-          width: stationary ? trainData.length * scale : undefined,
-          willChange: 'transform',
-        }}
-      >
+      {isMounted && (
         <div 
-          style={{ 
-            display: 'flex', 
-            flexDirection: isLeft ? 'row' : 'row-reverse', 
-            transform: `scale(${scale})`, 
-            transformOrigin: 'top left' 
+          className="living-train"
+          style={{
+            position: stationary ? 'relative' : 'absolute',
+            top: 0,
+            left: 0,
+            width: stationary ? trainData.length * scale : undefined,
+            willChange: 'transform',
           }}
         >
-           {trainData.wagons.map((wagon, i) => renderWagon(wagon, i))}
+          <div 
+            style={{ 
+              display: 'flex', 
+              width: 'max-content',
+              flexDirection: isLeft ? 'row' : 'row-reverse', 
+              transform: `scale(${scale})`, 
+              transformOrigin: 'top left' 
+            }}
+          >
+             {trainData.wagons.map((wagon, i) => renderWagon(wagon, i))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,13 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 export function SkyDetails({ timeOfDay }: { timeOfDay: string }) {
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const birds = useMemo(() => {
     return Array.from({ length: 4 }).map((_, i) => ({ // Reduced from 12 to 4 birds
       id: i,
@@ -29,6 +35,8 @@ export function SkyDetails({ timeOfDay }: { timeOfDay: string }) {
   const isNight = timeOfDay === 'night';
   const isEvening = timeOfDay === 'evening';
   const isMorning = timeOfDay === 'morning';
+
+  if (!isMounted) return null;
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-[5]">

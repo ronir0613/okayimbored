@@ -1,9 +1,15 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const LEAF_COLORS = ['#ffb7c5', '#ffc0cb', '#ffd1dc', '#ffe4e1', '#ffffff', '#ff9eaa'];
 
 export function WindLeaves() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const leaves = useMemo(() => {
     return Array.from({ length: 35 }).map((_, i) => { // Increased count slightly for blossoms
       // Start mostly from left offscreen, but some can start higher up
@@ -26,6 +32,10 @@ export function WindLeaves() {
       };
     });
   }, []);
+
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden z-[45]">

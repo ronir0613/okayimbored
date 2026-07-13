@@ -1,9 +1,15 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 
 const LEAF_COLORS = ['#ffb7c5', '#ffc0cb', '#ffd1dc', '#ffe4e1', '#ffffff', '#ff9eaa'];
 
 export function PlatformLeaves({ stationState, trainDirection }: { stationState?: string, trainDirection?: string }) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const leaves = useMemo(() => {
     return Array.from({ length: 30 }).map((_, i) => ({
       id: i,
@@ -13,6 +19,10 @@ export function PlatformLeaves({ stationState, trainDirection }: { stationState?
       color: LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)],
     }));
   }, []);
+
+  if (!isClient) {
+    return <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden mix-blend-screen opacity-70" />;
+  }
 
   return (
     <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden mix-blend-screen opacity-70">
@@ -33,7 +43,7 @@ function PlatformLeaf({ leaf, stationState, trainDirection }: { leaf: any, stati
 
   useEffect(() => {
     // Normal ambient breeze
-    if (stationState === 'ARRIVING' || stationState === 'PASSING_THROUGH' || stationState?.startsWith('DEPARTING')) {
+    if (stationState === 'APPROACHING' || stationState === 'BRAKING' || stationState === 'PASSING' || stationState?.startsWith('DEPARTING')) {
        return; // Wind handles it
     }
 
@@ -66,9 +76,9 @@ function PlatformLeaf({ leaf, stationState, trainDirection }: { leaf: any, stati
 
   useEffect(() => {
     // Train wind physics
-    if (stationState === 'ARRIVING' || stationState === 'PASSING_THROUGH' || stationState?.startsWith('DEPARTING')) {
+    if (stationState === 'APPROACHING' || stationState === 'BRAKING' || stationState === 'PASSING' || stationState?.startsWith('DEPARTING')) {
        const windDir = trainDirection === 'left' ? -1 : 1;
-       const baseWind = stationState === 'PASSING_THROUGH' ? 15 : 8; // Reduced base wind
+       const baseWind = stationState === 'PASSING' ? 15 : 8; // Reduced base wind
        
        const pushLeaf = () => {
          // Calculate distance factor based on Y position. 

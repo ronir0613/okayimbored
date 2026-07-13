@@ -36,6 +36,12 @@ export function PleasantRiver({ timeOfDay }: { timeOfDay: string }) {
     }));
   }, []);
 
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const [boats, setBoats] = useState<BoatData[]>([]);
 
   useEffect(() => {
@@ -94,7 +100,7 @@ export function PleasantRiver({ timeOfDay }: { timeOfDay: string }) {
 
       {/* Pixel Water Waves */}
       <div className="absolute inset-0 mix-blend-overlay">
-        {waves.map((wave, i) => (
+        {isMounted && waves.map((wave, i) => (
           <motion.div
             key={i}
             className={`absolute ${reflectionColor}`}

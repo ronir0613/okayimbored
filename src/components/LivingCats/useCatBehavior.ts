@@ -23,7 +23,7 @@ export function useCatBehavior(stationState?: string) {
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
     
-    if (stationState === 'STOPPED') {
+    if (stationState === 'DOORS_OPEN') {
       // Start boarding sequence after a small delay
       timeout = setTimeout(() => {
         setIsBoarding(true);
@@ -75,7 +75,7 @@ export function useCatBehavior(stationState?: string) {
           }, 3000);
         }, 100);
       }, 3000 + Math.random() * 5000); // Wait 3-8s after station is empty
-    } else if (stationState === 'ARRIVING') {
+    } else if (stationState === 'APPROACHING' || stationState === 'BRAKING') {
       // Wake up when train is arriving
       setCatState((prev) => {
         if (prev === 'sleeping' || prev === 'idle_to_sleeping') {

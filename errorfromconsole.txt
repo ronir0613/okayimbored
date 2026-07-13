@@ -1,0 +1,112 @@
+A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  <TheStation>
+    <div className="flex flex-..." onClick={function}>
+      <div>
+      <WindLeaves>
+      <div>
+      <div>
+      <div className="relative w...">
+        <div>
+        <div>
+        <PlatformLeaves stationState="WAITING_EMPTY" trainDirection="left">
+          <div className="absolute i...">
+            <PlatformLeaf leaf={{id:0, ...}} stationState="WAITING_EMPTY" trainDirection="left">
+              <motion.div className="absolute" style={{...}}>
+                <div
+                  className="absolute"
+                  style={{
++                   width: 3.517785091036959
+-                   width: "2.45847px"
++                   height: 2.462449563725871
+-                   height: "1.72093px"
++                   backgroundColor: "#ffc0cb"
++                   borderRadius: "50% 0 50% 0"
++                   left: "27.916022313627977vw"
+-                   left: "58.7029vw"
++                   top: "48.2515720375936%"
+-                   top: "94.7143%"
++                   transform: "rotate(329.21949245906785deg)"
+-                   transform: "rotate(104.592deg)"
+-                   background-color: "rgb(255, 209, 220)"
+-                   border-top-left-radius: "50%"
+-                   border-top-right-radius: "0px"
+-                   border-bottom-right-radius: "50%"
+-                   border-bottom-left-radius: "0px"
+                  }}
+                  ref={function}
+                >
+            <PlatformLeaf leaf={{id:1, ...}} stationState="WAITING_EMPTY" trainDirection="left">
+              <motion.div className="absolute" style={{...}}>
+                <div
+                  className="absolute"
+                  style={{
++                   width: 2.0022327084529814
+-                   width: "2.41729px"
++                   height: 1.401562895917087
+-                   height: "1.6921px"
++                   backgroundColor: "#ffd1dc"
++                   borderRadius: "50% 0 50% 0"
++                   left: "87.99903335671728vw"
+-                   left: "17.7735vw"
++                   top: "88.55010915478162%"
+-                   top: "12.6318%"
++                   transform: "rotate(112.13991315596755deg)"
+-                   transform: "rotate(311.366deg)"
+-                   background-color: "rgb(255, 183, 197)"
+-                   border-top-left-radius: "50%"
+-                   border-top-right-radius: "0px"
+-                   border-bottom-right-radius: "50%"
+-                   border-bottom-left-radius: "0px"
+                  }}
+                  ref={function}
+                >
+            <PlatformLeaf leaf={{id:2, ...}} stationState="WAITING_EMPTY" trainDirection="left">
+              <motion.div className="absolute" style={{...}}>
+                <div
+                  className="absolute"
+                  style={{
++                   width: 2.875857525120091
+-                   width: "5.03698px"
++                   height: 2.0131002675840635
+-                   height: "3.52589px"
++                   backgroundColor: "#ffffff"
++                   borderRadius: "50% 0 50% 0"
++                   left: "14.041772669532337vw"
+-                   left: "67.1029vw"
++                   top: "61.26095373825093%"
+-                   top: "44.1015%"
++                   transform: "rotate(209.71470614295885deg)"
+-                   transform: "rotate(343.626deg)"
+-                   background-color: "rgb(255, 158, 170)"
+-                   border-top-left-radius: "50%"
+-                   border-top-right-radius: "0px"
+-                   border-bottom-right-radius: "50%"
+-                   border-bottom-left-radius: "0px"
+                  }}
+                  ref={function}
+                >
+            <PlatformLeaf leaf={{id:3, ...}} stationState="WAITING_EMPTY" trainDirection="left">
+              <motion.div className="absolute" style={{...}}>
+                <div
+                  className="absolute"
+                  style={{
++                   width: 2.312835987233804
+-                   width: "5.35981px"
++                   height: 1.6189851910636626
+-                   height: "3.75186px"
++                   backgroundColor: "#ffc0cb"
++                   borderRadius: "50% 0 50% 0"
++                   left: "77.27167114211895vw"
+-                   left: "53.1222vw"
++                   t
