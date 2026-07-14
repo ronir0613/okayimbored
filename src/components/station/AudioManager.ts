@@ -298,6 +298,22 @@ export class AudioManager {
     this.synthInitialized = true;
   }
 
+  // ── SFX Volume Control (for Music Player) ──────────────────────────────────
+  
+  /**
+   * Smoothly adjusts the master gain for all station and ambient sounds.
+   * Useful when playing music over the station ambience.
+   */
+  setSFXVolume(level: number, fadeSec: number = 1.0): void {
+    if (this.disposed) return;
+    if (this.ctx.state === 'suspended') return;
+    
+    const now = this.ctx.currentTime;
+    this.master.gain.cancelScheduledValues(now);
+    this.master.gain.setValueAtTime(this.master.gain.value, now);
+    this.master.gain.linearRampToValueAtTime(level, now + fadeSec);
+  }
+
   // ── Snapshot (for Debug Overlay) ───────────────────────────────────────────
 
   getGainValues(): Record<string, number> {

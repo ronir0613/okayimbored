@@ -11,6 +11,7 @@ import { PleasantRiver } from './PleasantRiver';
 import { CitySkyline } from './CitySkyline';
 import { useTrainStation } from './station/useTrainStation';
 import { DebugOverlay } from './station/DebugOverlay';
+import { MusicPlayer } from './MusicPlayer';
 import type { FSMState } from './station/stationTypes';
 
 /**
@@ -51,6 +52,7 @@ export function TheStation() {
     handleBoard,
     canBoard,
     setTimeOfDay: setAudioTimeOfDay,
+    setSFXVolume,
     debugInfo,
   } = useTrainStation();
 
@@ -395,6 +397,9 @@ export function TheStation() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ─── Music Player ────────────────────────────────────────────────────── */}
+      <MusicPlayer setSFXVolume={setSFXVolume} />
 
       {/* ─── Development debug overlay ────────────────────────────────────── */}
       <DebugOverlay info={debugInfo} />

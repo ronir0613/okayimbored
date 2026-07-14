@@ -62,6 +62,9 @@ export interface TrainStationState {
   /** Time-of-day audio adjustment — call whenever timeOfDay changes */
   setTimeOfDay: (tod: 'morning' | 'afternoon' | 'evening' | 'night') => void;
 
+  /** Adjust the volume of the station background SFX */
+  setSFXVolume: (level: number, fadeSec?: number) => void;
+
   /** Debug snapshot — populated only in development builds */
   debugInfo: DebugInfo | null;
 }
@@ -152,10 +155,14 @@ export function useTrainStation(): TrainStationState {
     schedulerRef.current?.triggerBoarding();
   }, [fsmState]);
 
-  // ── Time-of-Day ─────────────────────────────────────────────────────────────
+  // ── Time-of-Day & Volume ──────────────────────────────────────────────────
 
   const setTimeOfDay = useCallback((tod: 'morning' | 'afternoon' | 'evening' | 'night') => {
     audioRef.current?.setTimeOfDay(tod);
+  }, []);
+
+  const setSFXVolume = useCallback((level: number, fadeSec = 1.0) => {
+    audioRef.current?.setSFXVolume(level, fadeSec);
   }, []);
 
   // ── Auto-init immediately and handle AudioContext resume ───────────────────
@@ -254,6 +261,7 @@ export function useTrainStation(): TrainStationState {
     handleBoard,
     canBoard: BOARDABLE_STATES.includes(fsmState),
     setTimeOfDay,
+    setSFXVolume,
     debugInfo,
   };
 }
