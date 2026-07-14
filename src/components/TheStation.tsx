@@ -58,6 +58,10 @@ export function TheStation() {
   const [timeOfDayClass, setTimeOfDayClass] = useState('bg-[#0F2027]');
   const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'night'>('night');
   const [isMounted, setIsMounted] = useState(false);
+  const [godModeTime, setGodModeTime] = useState<'morning' | 'afternoon' | 'evening' | 'night' | null>(null);
+  
+  // ── Middle light state ──
+  const [middleLightPhase, setMiddleLightPhase] = useState<'off' | 'flicker' | 'on'>('off');
 
   const legacyState = useMemo(() => toLegacyState(fsmState), [fsmState]);
   const { catState, catPosition, isVisible: isCatVisible, catWalkDuration, isBoarding, catY } = useCatBehavior(legacyState);
@@ -71,6 +75,15 @@ export function TheStation() {
   // ── Update time of day every minute ───────────────────────────────────────
   useEffect(() => {
     const update = () => {
+      if (godModeTime) {
+        setTimeOfDay(godModeTime);
+        if (godModeTime === 'morning') setTimeOfDayClass('bg-gradient-to-b from-sky-300 via-orange-50 to-amber-100');
+        else if (godModeTime === 'afternoon') setTimeOfDayClass('bg-gradient-to-b from-blue-400 to-sky-200');
+        else if (godModeTime === 'evening') setTimeOfDayClass('bg-gradient-to-b from-indigo-800 via-purple-400 to-orange-300');
+        else setTimeOfDayClass('bg-gradient-to-b from-[#040812] via-[#0A1226] to-[#121E3B]');
+        return;
+      }
+
       const h = new Date().getHours();
       if (h >= 6 && h < 12) {
         setTimeOfDay('morning');
@@ -89,12 +102,32 @@ export function TheStation() {
     update();
     const iv = setInterval(update, 60_000);
     return () => clearInterval(iv);
-  }, []);
+  }, [godModeTime]);
 
   // Sync time of day to AudioManager
   useEffect(() => {
     setAudioTimeOfDay(timeOfDay);
   }, [timeOfDay, setAudioTimeOfDay]);
+
+  // ── Middle light lifecycle ────────────────────────────────────────────────
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const loop = () => {
+      setMiddleLightPhase(current => {
+        const roll = Math.random();
+        if (current === 'off') {
+          return roll < 0.3 ? 'flicker' : 'off';
+        } else if (current === 'flicker') {
+          return roll < 0.5 ? 'on' : 'off';
+        } else {
+          return roll < 0.4 ? 'flicker' : (roll < 0.6 ? 'off' : 'on');
+        }
+      });
+      timeoutId = setTimeout(loop, 2000 + Math.random() * 5000);
+    };
+    timeoutId = setTimeout(loop, 2000);
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   // ── Building colours ──────────────────────────────────────────────────────
   const getBuildingColor = useCallback((layerIndex: number) => {
@@ -135,8 +168,25 @@ export function TheStation() {
 
       {/* Center-frame wrapper for mobile/smaller devices optimization */}
       <div className="absolute inset-x-0 mx-auto w-full min-w-[1280px] h-full flex flex-col left-1/2 -translate-x-1/2">
+        
+        {/* Global Ambient Reflection */}
+        <div className="absolute inset-0 z-[45] pointer-events-none overflow-hidden">
+          {(timeOfDay === 'evening' || timeOfDay === 'night') && (
+            <div className={`absolute inset-0 mix-blend-screen transition-opacity duration-100 ${lightsFlickering ? 'opacity-[0.02]' : 'opacity-10'}`}>
+              <div className="w-full h-full bg-gradient-to-b from-slate-200/40 via-cyan-100/5 to-transparent" />
+            </div>
+          )}
+        </div>
+
+        {/* ─── Simple Platform Light Effect (z-[55]) ───────────────────────────────────────── */}
+        <div className="absolute inset-x-0 bottom-0 h-[30vh] z-[55] pointer-events-none overflow-hidden">
+          {(timeOfDay === 'evening' || timeOfDay === 'night') && (
+            <div className={`absolute inset-0 bg-gradient-to-t from-slate-200/10 to-transparent mix-blend-overlay transition-opacity duration-100 ${lightsFlickering ? 'opacity-30' : 'opacity-80'}`} />
+          )}
+        </div>
+
         {/* Wind Leaves Layer */}
-        <WindLeaves />
+        <WindLeaves timeOfDay={timeOfDay} />
 
       {/* ─── Layer 1: Atmosphere (Top ~40%) ─────────────────────────────────── */}
       <div className={`relative w-full h-[40dvh] transition-colors duration-[5000ms] ${timeOfDayClass} flex flex-col justify-end overflow-hidden shrink-0`}>
@@ -241,7 +291,7 @@ export function TheStation() {
               timeOfDay={timeOfDay}
               className={`drop-shadow-[0_-5px_15px_rgba(0,0,0,0.5)] transition-all duration-3000 ${
                 timeOfDay === 'night'
-                  ? 'filter brightness-[0.7] contrast-[1.2]'
+                  ? 'filter brightness-[0.45] contrast-[1.3]'
                   : 'filter brightness-[0.85] contrast-[1.1] sepia-[0.1]'
               }`}
               style={{ overflow: 'visible', width: 'fit-content' }}
@@ -264,7 +314,7 @@ export function TheStation() {
         <div className="absolute top-3 inset-x-0 w-full h-1 bg-black/40 pointer-events-none z-30" />
 
         {/* Platform Leaves */}
-        <PlatformLeaves stationState={legacyState} trainDirection={direction} />
+        <PlatformLeaves stationState={legacyState} trainDirection={direction} timeOfDay={timeOfDay} />
 
         {/* Concrete Block Pattern */}
         <div
@@ -300,33 +350,6 @@ export function TheStation() {
           ))}
         </div>
 
-        {/* Fluorescent lights (Evening) */}
-        <AnimatePresence>
-          {timeOfDay === 'evening' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 3 }}
-              className={`absolute top-0 inset-x-0 w-full h-full flex justify-around px-20 sm:px-40 pointer-events-none mix-blend-screen opacity-60 ${lightsFlickering ? 'opacity-10' : ''}`}
-            >
-              {[1,2,3].map(i => (
-                <div key={`fluor-${i}`} className="relative w-24 sm:w-48 h-[150%]">
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-b from-cyan-300/20 via-emerald-200/5 to-transparent blur-2xl transform -skew-x-12 origin-top"
-                    animate={{ opacity: [0.8, 1, 0.7, 0.9, 1, 0.6, 1] }}
-                    transition={{ duration: 4 + i, repeat: Infinity, repeatType: 'mirror' }}
-                  />
-                  <motion.div
-                    className="absolute bottom-[40%] left-1/2 -translate-x-1/2 w-32 h-6 bg-cyan-100/10 blur-xl rounded-[100%]"
-                    animate={{ opacity: [0.5, 0.8, 0.4, 0.9, 0.7] }}
-                    transition={{ duration: 2 + i * 0.5, repeat: Infinity, repeatType: 'mirror' }}
-                  />
-                </div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Bird micro-event */}
         {birdLanded && timeOfDay !== 'night' && (
@@ -375,6 +398,28 @@ export function TheStation() {
 
       {/* ─── Development debug overlay ────────────────────────────────────── */}
       <DebugOverlay info={debugInfo} />
+
+      {/* GOD MODE TEMPORARY OVERLAY */}
+      <div className="fixed top-4 left-4 z-[999] bg-black/80 border border-white/20 p-2 text-white font-mono text-xs rounded pointer-events-auto flex flex-col">
+        <div className="mb-2 font-bold text-amber-400">GOD MODE (Time)</div>
+        <div className="flex gap-2">
+          {['morning', 'afternoon', 'evening', 'night'].map(t => (
+            <button
+              key={t}
+              onClick={(e) => { e.stopPropagation(); setGodModeTime(t as any); }}
+              className={`px-2 py-1 rounded cursor-pointer ${godModeTime === t || (!godModeTime && timeOfDay === t) ? 'bg-white/30' : 'bg-white/10 hover:bg-white/20'}`}
+            >
+              {t}
+            </button>
+          ))}
+          <button 
+            onClick={(e) => { e.stopPropagation(); setGodModeTime(null); }}
+            className={`px-2 py-1 rounded ml-2 border border-red-500/50 cursor-pointer ${!godModeTime ? 'bg-red-500/20' : 'bg-transparent hover:bg-red-500/10'}`}
+          >
+            Auto
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

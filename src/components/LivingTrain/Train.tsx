@@ -3,7 +3,7 @@ import type { TrainProps, WagonData } from './trainTypes';
 import { generateTracks, generateTrain } from './trainGenerator';
 
 
-export const Train: React.FC<TrainProps> = ({
+export const Train: React.FC<TrainProps & { timeOfDay?: string }> = ({
   trainType = 'random',
   direction = 'left',
   speed = 1,
@@ -17,6 +17,7 @@ export const Train: React.FC<TrainProps> = ({
   style = {},
   onBoard,
   isInteractable = true,
+  timeOfDay,
 }) => {
   const [trainData, setTrainData] = useState(() => generateTrain(trainType));
 
@@ -33,8 +34,6 @@ export const Train: React.FC<TrainProps> = ({
 
   useEffect(() => {
     if (showTracks) {
-      // Determine the width for tracks. If stationary and no width provided, just generate a few tracks.
-      // If moving, we usually want it to span the whole screen width.
       let w = containerWidth;
       if (!w) {
          w = typeof window !== 'undefined' ? window.innerWidth : 1920;
@@ -46,12 +45,11 @@ export const Train: React.FC<TrainProps> = ({
   const isLeft = direction === 'left';
 
   const renderWagon = (wagon: WagonData, index: number) => {
-    // In Desktop Train, sprites are flipped by default unless wagon.flip is true.
-    // So "flip" means "do not flip" from the default left-facing orientation.
-    // If direction is left, we scaleX(-1) by default, and scaleX(1) if wagon.flip.
-    // If direction is right, we do the exact opposite.
     const shouldFlip = isLeft ? !wagon.flip : wagon.flip;
     const wagonScaleX = shouldFlip ? -1 : 1;
+    
+    // Window lighting logic
+    const isNight = timeOfDay === 'night' || timeOfDay === 'evening';
 
     return (
       <div
@@ -71,14 +69,16 @@ export const Train: React.FC<TrainProps> = ({
           height: 16,
           overflow: 'hidden',
         }}>
-          {/* Background blocker to prevent river showing through transparent windows */}
+          {/* Background blocker acts as window lights during night */}
           <div style={{
              position: 'absolute',
              bottom: 12,
              left: 0,
              width: '100%',
              height: 12,
-             backgroundColor: '#050810',
+             backgroundColor: isNight ? '#fcd34d' : '#050810',
+             boxShadow: isNight ? '0 0 15px rgba(252, 211, 77, 0.6)' : 'none',
+             transition: 'background-color 5s, box-shadow 5s',
           }} />
           <div
             style={{

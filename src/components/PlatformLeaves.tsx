@@ -3,7 +3,7 @@ import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 
 const LEAF_COLORS = ['#ffb7c5', '#ffc0cb', '#ffd1dc', '#ffe4e1', '#ffffff', '#ff9eaa'];
 
-export function PlatformLeaves({ stationState, trainDirection }: { stationState?: string, trainDirection?: string }) {
+export function PlatformLeaves({ stationState, trainDirection, timeOfDay }: { stationState?: string, trainDirection?: string, timeOfDay?: string }) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -17,6 +17,7 @@ export function PlatformLeaves({ stationState, trainDirection }: { stationState?
       startY: Math.random() * 90 + 5, // % of platform height
       size: 2 + Math.random() * 4,
       color: LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)],
+      nightVisibility: Math.random() > 0.4 ? 0 : 0.15 + Math.random() * 0.15, // 60% invisible at night
     }));
   }, []);
 
@@ -25,15 +26,15 @@ export function PlatformLeaves({ stationState, trainDirection }: { stationState?
   }
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden mix-blend-screen opacity-70">
+    <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden mix-blend-screen">
       {leaves.map((leaf) => (
-        <PlatformLeaf key={leaf.id} leaf={leaf} stationState={stationState} trainDirection={trainDirection} />
+        <PlatformLeaf key={leaf.id} leaf={leaf} stationState={stationState} trainDirection={trainDirection} timeOfDay={timeOfDay} />
       ))}
     </div>
   );
 }
 
-function PlatformLeaf({ leaf, stationState, trainDirection }: { leaf: any, stationState?: string, trainDirection?: string }) {
+function PlatformLeaf({ leaf, stationState, trainDirection, timeOfDay }: { leaf: any, stationState?: string, trainDirection?: string, timeOfDay?: string }) {
   const x = useMotionValue(leaf.startX);
   const y = useMotionValue(leaf.startY);
   const rotation = useMotionValue(Math.random() * 360);
@@ -121,6 +122,10 @@ function PlatformLeaf({ leaf, stationState, trainDirection }: { leaf: any, stati
     }
   }, [stationState, trainDirection, x, y, rotation]);
 
+  const isNight = timeOfDay === 'night';
+  const isEvening = timeOfDay === 'evening';
+  const currentOpacity = isNight ? leaf.nightVisibility : isEvening ? 0.4 : 0.7;
+
   return (
     <motion.div
       className="absolute"
@@ -132,6 +137,8 @@ function PlatformLeaf({ leaf, stationState, trainDirection }: { leaf: any, stati
         left: leftValue,
         top: topValue,
         rotate: rotation,
+        opacity: currentOpacity,
+        filter: isNight ? 'brightness(0.3)' : 'brightness(1)',
       }}
     />
   );
