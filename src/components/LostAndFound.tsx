@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useExperienceStore } from '../lib/store';
 
 const ORDINARY = [
   'one sock', 'house keys', 'bus ticket', 'grocery list', 'umbrella',
@@ -67,6 +68,7 @@ export default function LostAndFound() {
   const [items, setItems] = useState<LFItem[]>([]);
   const [mounted, setMounted] = useState(false);
   const nextId = useRef(0);
+  const { pocket, addToPocket, hasInPocket } = useExperienceStore();
 
   const generateNote = (musicPlaying: boolean, stationName: string | null) => {
     const r = Math.random();
@@ -135,6 +137,21 @@ export default function LostAndFound() {
 
     const numItems = Math.floor(Math.random() * 6) + 5; // 5 to 10
     const initialItems = [];
+    
+    // Inject Handwritten Number if not already in pocket
+    if (!useExperienceStore.getState().hasInPocket('Handwritten Number')) {
+      initialItems.push({
+        id: 'handwritten-number',
+        status: 'LOST' as ItemStatus,
+        name: 'Handwritten Number',
+        note: 'A torn piece of paper with a phone number. Looks urgent.',
+        x: 50,
+        y: 50,
+        visualEvent: 'NONE' as VisualEvent,
+        hasCat: 'NONE' as any
+      });
+    }
+
     for (let i = 0; i < numItems; i++) {
       initialItems.push(generateSingleItem(isPlaying, stationName));
     }
@@ -222,6 +239,15 @@ export default function LostAndFound() {
               <span className="text-[11px] text-white/40 italic w-full">
                 {item.note}
               </span>
+
+              {item.name === 'Handwritten Number' && (
+                <div 
+                  onClick={() => addToPocket('Handwritten Number')}
+                  className="mt-4 text-[9px] uppercase tracking-widest text-white/10 hover:text-white/40 transition-colors cursor-pointer"
+                >
+                  Take paper →
+                </div>
+              )}
             </div>
 
             {/* Event Microcopy */}

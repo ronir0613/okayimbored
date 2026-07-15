@@ -1,11 +1,11 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import BuildingLayout from '../layouts/BuildingLayout.astro';
 import TheBasement from '../components/TheBasement';
 ---
 
-<Layout title="The Basement" noindex={true} mainClass="">
+<BuildingLayout title="The Basement" noindex={true} mainClass="">
   <TheBasement client:only="react" />
-</Layout>
+</BuildingLayout>
 
 <script>
   import { navigate } from 'astro:transitions/client';

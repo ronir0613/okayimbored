@@ -1,8 +1,8 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import TheLobby from '../components/TheLobby';
+import BuildingLayout from '../layouts/BuildingLayout.astro';
+import { ReceptionHub } from '../components/ReceptionHub';
 ---
 
-<Layout title="The Lobby" noindex={true} mainClass="">
-  <TheLobby client:load />
-</Layout>
+<BuildingLayout title="The Lobby" noindex={true} mainClass="w-full min-h-[100dvh] flex flex-col items-center justify-center p-4" backUrl="/reception">
+  <ReceptionHub client:load />
+</BuildingLayout>

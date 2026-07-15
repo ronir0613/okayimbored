@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { STATION_TRACKS } from './station/tracks';
+import { useExperienceStore } from '../lib/store';
 
 interface MusicPlayerProps {
   /** Callback to lower station SFX. (level, fadeSec) */
-  setSFXVolume: (level: number, fadeSec?: number) => void;
+  setSFXVolume?: (level: number, fadeSec?: number) => void;
   /** Optional override for the maximum music volume */
   volumeOverride?: number;
 }
@@ -12,7 +13,7 @@ interface MusicPlayerProps {
 const MAX_MUSIC_VOLUME = 0.4;
 
 export function MusicPlayer({ setSFXVolume, volumeOverride }: MusicPlayerProps) {
-  const [acquired, setAcquired] = useState(false);
+  const { hasMusicPlayer, setHasMusicPlayer } = useExperienceStore();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
 
@@ -21,9 +22,18 @@ export function MusicPlayer({ setSFXVolume, volumeOverride }: MusicPlayerProps) 
   const audioB = useRef<HTMLAudioElement | null>(null);
   const activeAudio = useRef<'A' | 'B'>('A');
   const fadeIntervalId = useRef<number | null>(null);
+  const [globalVolumeOverride, setGlobalVolumeOverride] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const handleOverride = (e: any) => {
+      setGlobalVolumeOverride(e.detail?.volume);
+    };
+    window.addEventListener('music:override', handleOverride);
+    return () => window.removeEventListener('music:override', handleOverride);
+  }, []);
 
   // Determine the effective max volume based on override
-  const currentMaxVolume = volumeOverride !== undefined ? volumeOverride : MAX_MUSIC_VOLUME;
+  const currentMaxVolume = globalVolumeOverride !== undefined ? globalVolumeOverride : (volumeOverride !== undefined ? volumeOverride : MAX_MUSIC_VOLUME);
 
   // Track the actual volume target internally so effect can apply it smoothly
   useEffect(() => {
@@ -80,10 +90,16 @@ export function MusicPlayer({ setSFXVolume, volumeOverride }: MusicPlayerProps) 
 
   // Update SFX volume whenever play state changes
   useEffect(() => {
-    if (isPlaying) {
-      setSFXVolume(0.3, 1.0); // 30% volume, 1s fade
-    } else {
-      setSFXVolume(1.0, 1.0); // 100% volume, 1s fade
+    if (setSFXVolume) {
+      if (isPlaying) {
+        setSFXVolume(0.3, 1.0); // 30% volume, 1s fade
+      } else {
+        setSFXVolume(1.0, 1.0); // 100% volume, 1s fade
+      }
+    }
+    // Also dispatch global event for other listeners
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('music:playing', { detail: { isPlaying } }));
     }
   }, [isPlaying, setSFXVolume]);
 
@@ -175,7 +191,7 @@ export function MusicPlayer({ setSFXVolume, volumeOverride }: MusicPlayerProps) 
   return (
     <div className="absolute inset-0 pointer-events-none z-[60]">
       <AnimatePresence>
-        {!acquired && (
+        {!hasMusicPlayer && (
           <motion.div
             layoutId="music-player-container"
             className="absolute bottom-12 left-12 md:bottom-24 md:left-32 cursor-pointer pointer-events-auto"
@@ -184,7 +200,7 @@ export function MusicPlayer({ setSFXVolume, volumeOverride }: MusicPlayerProps) 
             exit={{ opacity: 0, scale: 0.8 }}
             whileHover={{ scale: 1.1, rotate: -5 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setAcquired(true)}
+            onClick={() => setHasMusicPlayer(true)}
           >
             <img 
               src="/newassets/music player.png" 
@@ -202,7 +218,7 @@ export function MusicPlayer({ setSFXVolume, volumeOverride }: MusicPlayerProps) 
       </AnimatePresence>
 
       <AnimatePresence>
-        {acquired && (
+        {hasMusicPlayer && (
           <motion.div
             layoutId="music-player-container"
             className="absolute top-6 right-6 md:top-8 md:right-8 bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center gap-4 shadow-2xl pointer-events-auto w-[300px]"

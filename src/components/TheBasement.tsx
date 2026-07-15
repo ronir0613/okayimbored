@@ -161,6 +161,7 @@ const useBasementAudio = () => {
 export default function TheBasement() {
   const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState('');
+  const { pocket, addToPocket, hasInPocket } = useExperienceStore();
   
   // Rare Events
   const [isDark, setIsDark] = useState(false); // Bulb flickering
@@ -426,9 +427,26 @@ export default function TheBasement() {
                </div>
              )}
           </div>
-          <div className="col-span-2 text-center mt-32">
+          <div className="col-span-2 text-center mt-16">
              <div className="text-[10px] tracking-widest">A dusty window.</div>
              <div className="text-[8px] text-white/30 italic mt-2">"{objects[2] || OBJECT_LABELS[2]}"</div>
+          </div>
+        </div>
+
+        {/* Loose Tile / Faded Photograph */}
+        <div className="flex justify-center mt-32 mb-16 relative z-20">
+          <div 
+            onClick={() => addToPocket('Faded Photograph')}
+            className={`w-32 h-32 border border-white/5 flex flex-col items-center justify-center transition-all ${hasInPocket('Faded Photograph') ? 'bg-[#010101] rotate-[-2deg]' : 'cursor-pointer hover:border-white/20 hover:bg-white/[0.02]'}`}
+          >
+            <div className="text-[10px] tracking-[0.2em] text-white/20 uppercase mb-2">Loose Tile</div>
+            {hasInPocket('Faded Photograph') ? (
+              <div className="text-[8px] text-white/10 uppercase tracking-widest text-center mt-2">Empty</div>
+            ) : (
+              <div className="text-[8px] text-white/10 group-hover:text-white/40 uppercase tracking-widest text-center mt-2 transition-colors">
+                Take photo →
+              </div>
+            )}
           </div>
         </div>
 

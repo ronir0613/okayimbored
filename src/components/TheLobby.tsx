@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PixelCat, type CatState } from './LivingCats/PixelCat';
+import { useExperienceStore } from '../lib/store';
 
 type CatIntegration = 'NONE' | 'SLEEPING_RECEPTION' | 'WALKING' | 'WAITING_ELEVATOR';
 
@@ -40,6 +41,7 @@ export default function TheLobby() {
   const [isPhoneRinging, setIsPhoneRinging] = useState(false);
   const [isDirectoryFlickering, setIsDirectoryFlickering] = useState(false);
   const [showTinyText, setShowTinyText] = useState(false);
+  const { pocket, addToPocket, hasInPocket } = useExperienceStore();
 
   useEffect(() => {
     setMounted(true);
@@ -275,14 +277,35 @@ export default function TheLobby() {
             </div>
 
             {/* Visitor Book (Small table to the side) */}
-            <div className="absolute bottom-4 -left-32 w-24 h-32 flex flex-col items-center">
-              <div className="text-[8px] uppercase tracking-[0.2em] text-white/20 mb-2">Visitor Book</div>
-              <div className="w-16 h-12 bg-[#151515] border border-white/5 rounded-sm relative shadow-lg flex items-center justify-center p-2">
-                <span className="text-[6px] text-white/30 italic text-center leading-tight">
-                  "{visitorEntry}"
-                </span>
+            <div className="absolute bottom-4 -left-32 w-48 flex items-end gap-4">
+              <div className="w-24 flex flex-col items-center">
+                <div className="text-[8px] uppercase tracking-[0.2em] text-white/20 mb-2">Visitor Book</div>
+                <div className="w-16 h-12 bg-[#151515] border border-white/5 rounded-sm relative shadow-lg flex items-center justify-center p-2">
+                  <span className="text-[6px] text-white/30 italic text-center leading-tight">
+                    "{visitorEntry}"
+                  </span>
+                </div>
+                <div className="w-20 h-16 bg-[#080808] absolute bottom-0 -z-10 border-t border-white/5"></div>
               </div>
-              <div className="w-20 h-16 bg-[#080808] absolute bottom-0 -z-10 border-t border-white/5"></div>
+              
+              {/* Storage Key */}
+              <div 
+                onClick={() => addToPocket('Storage 12 Key')}
+                className="w-16 flex flex-col items-center cursor-pointer group"
+              >
+                {!hasInPocket('Storage 12 Key') ? (
+                  <>
+                    <div className="text-[8px] uppercase tracking-[0.2em] text-white/20 mb-2 group-hover:text-white/50 transition-colors">Key</div>
+                    <div className="w-6 h-6 border border-white/10 rounded-full flex items-center justify-center bg-white/5 mb-1 shadow-lg group-hover:bg-white/10 transition-colors">
+                      <div className="w-1 h-3 bg-white/40"></div>
+                    </div>
+                    <div className="text-[6px] uppercase tracking-widest text-white/10 group-hover:text-white/40 transition-colors text-center leading-tight">Storage 12<br/>Take →</div>
+                  </>
+                ) : (
+                  <div className="text-[6px] uppercase tracking-[0.2em] text-white/10 mt-10">Empty table</div>
+                )}
+                <div className="w-16 h-12 bg-[#080808] absolute bottom-0 -z-10 border-t border-white/5"></div>
+              </div>
             </div>
 
             {/* Walking Cat */}

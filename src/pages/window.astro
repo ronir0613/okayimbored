@@ -1,12 +1,11 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import BuildingLayout from '../layouts/BuildingLayout.astro';
 import WindowExperience from '../components/WindowExperience';
 ---
 
-<Layout 
+<BuildingLayout 
   title="The Window" 
-  noindex={true}
   mainClass="flex flex-col items-center justify-center min-h-[100dvh] w-full bg-[#0a0a0a] m-0 p-0 overflow-hidden selection:bg-transparent"
 >
   <WindowExperience client:only="react" />
-</Layout>
+</BuildingLayout>

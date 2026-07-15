@@ -1,0 +1,8 @@
+---
+import BuildingLayout from '../layouts/BuildingLayout.astro';
+import { ReceptionScene } from '../components/ReceptionScene';
+---
+
+<BuildingLayout title="Reception | Building Directory" mainClass="w-full min-h-[100dvh] flex flex-col items-center justify-center p-4">
+  <ReceptionScene client:load />
+</BuildingLayout>

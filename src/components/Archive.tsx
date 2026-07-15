@@ -65,6 +65,9 @@ export default function Archive() {
   const [isRare, setIsRare] = useState(false);
   const [hasLostAndFound, setHasLostAndFound] = useState<{name: string, index: number} | null>(null);
 
+  const { pocket, addToPocket, hasInPocket } = useExperienceStore();
+  const [cabinetOpen, setCabinetOpen] = useState(false);
+
   useEffect(() => {
     setMounted(true);
     addEcho('visited_archive');
@@ -143,6 +146,62 @@ export default function Archive() {
           <PixelCat state="idle" />
         </div>
       </div>
+
+      {/* NEW INTERACTIVE OBJECTS */}
+      <section className="mb-48 grid grid-cols-1 sm:grid-cols-2 gap-16">
+        {/* Pile of boxes for Vinyl Record */}
+        <div 
+          onClick={() => addToPocket('Old Vinyl Record')}
+          className="border border-white/5 hover:border-white/20 p-8 cursor-pointer group transition-colors relative"
+        >
+          <div className="text-[10px] tracking-[0.3em] text-white/20 uppercase mb-4">
+            Dusty Boxes
+          </div>
+          <div className="text-sm text-white/60 italic font-serif">
+            A stack of unmarked cardboard boxes. Something flat is sticking out of the top one.
+          </div>
+          {hasInPocket('Old Vinyl Record') ? (
+            <div className="mt-4 text-[10px] uppercase tracking-widest text-white/30">
+              You took the Old Vinyl Record.
+            </div>
+          ) : (
+            <div className="mt-4 text-[10px] uppercase tracking-widest text-white/10 group-hover:text-white/40 transition-colors">
+              Take it →
+            </div>
+          )}
+        </div>
+
+        {/* Locked Cabinet for Maintenance Report */}
+        <div 
+          onClick={() => {
+            if (hasInPocket('Storage 12 Key')) {
+              setCabinetOpen(true);
+            }
+          }}
+          className={`border border-white/5 p-8 transition-colors relative ${hasInPocket('Storage 12 Key') && !cabinetOpen ? 'hover:border-white/20 cursor-pointer group' : ''}`}
+        >
+          <div className="text-[10px] tracking-[0.3em] text-white/20 uppercase mb-4">
+            Cabinet 12
+          </div>
+          {!cabinetOpen ? (
+            <>
+              <div className="text-sm text-white/60 italic font-serif">
+                A locked metal filing cabinet. It's rusted shut.
+              </div>
+              <div className="mt-4 text-[10px] uppercase tracking-widest text-white/10 group-hover:text-white/40 transition-colors">
+                {hasInPocket('Storage 12 Key') ? 'Unlock with key →' : 'Requires a key'}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-sm text-white/60 italic font-serif">
+                The cabinet is open. Inside is a crumpled maintenance report: <br/><br/>
+                "The hum in the ventilation isn't mechanical. It's trying to mimic the train."
+              </div>
+            </>
+          )}
+        </div>
+      </section>
 
       {/* SECTION 1: RETIRED OBSERVATIONS */}
       <section className="mb-48">

@@ -1,9 +1,9 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import BuildingLayout from '../layouts/BuildingLayout.astro';
 import NoticeBoard from '../components/NoticeBoard';
 ---
 
-<Layout title="The Notice Board" noindex={true} mainClass="w-full max-w-none p-0 flex-1 flex flex-col">
+<BuildingLayout title="The Notice Board" noindex={true} mainClass="w-full max-w-none p-0 flex-1 flex flex-col">
   <div class="relative w-full h-screen bg-[#050505]">
     <NoticeBoard client:load />
     
@@ -16,7 +16,7 @@ import NoticeBoard from '../components/NoticeBoard';
       </button>
     </div>
   </div>
-</Layout>
+</BuildingLayout>
 
 <script>
   import { navigate } from 'astro:transitions/client';

@@ -1,6 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { TheStation } from '../components/TheStation';
+import MicroWidget from '../components/MicroWidget';
+import { MusicPlayer } from '../components/MusicPlayer';
 
 const homepageSchema = {
   "@context": "https://schema.org",
@@ -31,4 +33,8 @@ const homepageSchema = {
 
 <Layout schema={JSON.stringify(homepageSchema)} hideWidgets={true} mainClass="w-full h-full p-0 m-0 overflow-hidden">
 	<TheStation client:load />
+	<MicroWidget client:idle transition:persist="micro-widget" />
+	<div transition:persist="music-player">
+		<MusicPlayer client:load setSFXVolume={() => {}} />
+	</div>
 </Layout>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { getEchoes } from '../lib/echoes';
+import { useExperienceStore } from '../lib/store';
 
 type TonightData = {
   observations: string[];
@@ -15,6 +16,8 @@ type TonightData = {
 export default function TonightLogbook() {
   const [data, setData] = useState<TonightData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { pocket, removeFromPocket, hasInPocket } = useExperienceStore();
+  const [placedPhoto, setPlacedPhoto] = useState(false);
 
   useEffect(() => {
     fetch('/api/tonight')
@@ -151,9 +154,33 @@ export default function TonightLogbook() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 8, ease: "easeInOut", delay: 2 + data.observations.length * 1.5 + 10 }}
-          className="mt-40 mb-32 text-center w-full text-white/40 italic font-serif text-lg sm:text-2xl"
+          className="mt-40 text-center w-full text-white/40 italic font-serif text-lg sm:text-2xl"
         >
-          {data.websiteNote}
+          {placedPhoto ? "We remember this." : data.websiteNote}
+        </motion.div>
+
+        {/* Placing Photograph Interaction */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 8, ease: "easeInOut", delay: 2 + data.observations.length * 1.5 + 12 }}
+          className="mb-32 flex justify-center w-full"
+        >
+          {hasInPocket('Faded Photograph') && !placedPhoto ? (
+            <button 
+              onClick={() => {
+                removeFromPocket('Faded Photograph');
+                setPlacedPhoto(true);
+              }}
+              className="text-[10px] uppercase tracking-widest text-white/30 hover:text-white/60 transition-colors border-b border-white/10 pb-1"
+            >
+              Leave the Faded Photograph here
+            </button>
+          ) : placedPhoto ? (
+            <div className="text-[10px] uppercase tracking-widest text-white/20 italic">
+              A faded photograph rests between the pages.
+            </div>
+          ) : null}
         </motion.div>
 
       </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCurrentShift, getShiftAudioConfig } from '../lib/shift';
+import { useExperienceStore } from '../lib/store';
 
 const STATIONS = [
   { id: 'station-01', name: 'late night radio', file: '/music/juraganvisi-serene-felt-piano-with-airy-pads-and-gentle-vinyl-crackle-ambience-408702.mp3' },
@@ -16,6 +17,10 @@ export default function RecordPlayer() {
   const [mounted, setMounted] = useState(false);
   const [playerState, setPlayerState] = useState<PlayerState>('IDLE');
   const [stationIndex, setStationIndex] = useState(0);
+  const hasVinyl = useExperienceStore((state) => state.pocket.includes('Old Vinyl Record'));
+  const availableStations = hasVinyl 
+    ? [...STATIONS, { id: 'station-04', name: 'old vinyl record', file: '/music/dream-protocol-rain-drops-at-sea-ambient-piano-114653.mp3' }] 
+    : STATIONS;
   
   const [isTonight, setIsTonight] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -261,7 +266,7 @@ export default function RecordPlayer() {
   };
 
   const changeStation = () => {
-    const nextIdx = (stationIndex + 1) % STATIONS.length;
+    const nextIdx = (stationIndex + 1) % availableStations.length;
     setStationIndex(nextIdx);
     localStorage.setItem('okayimbored_station', nextIdx.toString());
     
@@ -447,7 +452,7 @@ export default function RecordPlayer() {
     >
       <audio 
         ref={audioRef}
-        src={STATIONS[stationIndex].file}
+        src={availableStations[stationIndex]?.file || STATIONS[0].file}
         loop
         preload="auto"
       />
@@ -475,7 +480,7 @@ export default function RecordPlayer() {
               >
                 <span className={`text-white/40 mb-0.5 ${isRadioRoom ? 'text-xs' : 'text-[10px]'}`}>now playing:</span>
                 <span className={`text-[#a5b4fc]/80 transition-colors group-hover:text-[#a5b4fc] group-hover:drop-shadow-[0_0_4px_rgba(165,180,252,0.5)] truncate w-full ${isRadioRoom ? 'text-base text-center font-mono' : 'text-xs text-right'}`}>
-                  {STATIONS[stationIndex].name}
+                  {availableStations[stationIndex]?.name || STATIONS[0].name}
                 </span>
                 {isRadioRoom && (
                   <span className="text-[10px] text-white/20 mt-2 font-mono hover:text-white/45 transition-colors">

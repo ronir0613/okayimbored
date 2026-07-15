@@ -1,13 +1,13 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import BuildingLayout from '../layouts/BuildingLayout.astro';
 import TonightLogbook from '../components/TonightLogbook';
 
 const title = "Tonight | okayimbored";
 const description = "The website kept some notes.";
 ---
 
-<Layout title={title} description={description}>
+<BuildingLayout title={title} description={description}>
   <main class="w-full h-full bg-black">
     <TonightLogbook client:only="react" />
   </main>
-</Layout>
+</BuildingLayout>

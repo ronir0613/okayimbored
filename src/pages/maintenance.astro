@@ -1,8 +1,8 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import BuildingLayout from '../layouts/BuildingLayout.astro';
 import MaintenanceRoom from '../components/MaintenanceRoom';
 ---
 
-<Layout title="Maintenance" noindex={true}>
+<BuildingLayout title="Maintenance" noindex={true}>
   <MaintenanceRoom client:load />
-</Layout>
+</BuildingLayout>

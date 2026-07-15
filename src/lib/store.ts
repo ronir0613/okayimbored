@@ -13,15 +13,29 @@ export interface ExperienceState {
   incrementCuriosity: () => void;
   incrementPityTimer: () => void;
   resetPityTimer: () => void;
+
+  pocket: string[];
+  addToPocket: (item: string) => void;
+  removeFromPocket: (item: string) => void;
+  hasInPocket: (item: string) => boolean;
+
+  hasCheckedIn: boolean;
+  setHasCheckedIn: (val: boolean) => void;
+
+  hasMusicPlayer: boolean;
+  setHasMusicPlayer: (val: boolean) => void;
 }
 
 export const useExperienceStore = create<ExperienceState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       echoes: [],
       restlessness_score: 0,
       curiosity_score: 0,
       pity_timer: 0,
+      pocket: [],
+      hasCheckedIn: false,
+      hasMusicPlayer: false,
 
       addEcho: (echo: string) => 
         set((state) => ({
@@ -44,6 +58,22 @@ export const useExperienceStore = create<ExperienceState>()(
         
       resetPityTimer: () => 
         set({ pity_timer: 0 }),
+        
+      addToPocket: (item: string) =>
+        set((state) => ({
+          pocket: state.pocket.includes(item) ? state.pocket : [...state.pocket, item]
+        })),
+
+      removeFromPocket: (item: string) =>
+        set((state) => ({
+          pocket: state.pocket.filter((i) => i !== item)
+        })),
+
+      hasInPocket: (item: string) => get().pocket.includes(item),
+
+      setHasCheckedIn: (val: boolean) => set({ hasCheckedIn: val }),
+      
+      setHasMusicPlayer: (val: boolean) => set({ hasMusicPlayer: val }),
     }),
     {
       name: 'okayimbored_state_metrics',

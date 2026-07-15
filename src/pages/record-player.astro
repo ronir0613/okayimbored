@@ -1,0 +1,8 @@
+---
+import BuildingLayout from '../layouts/BuildingLayout.astro';
+import RecordPlayer from '../components/RecordPlayer';
+---
+
+<BuildingLayout title="Record Player" mainClass="w-full min-h-[100dvh] flex flex-col items-center justify-center">
+  <RecordPlayer client:load />
+</BuildingLayout>

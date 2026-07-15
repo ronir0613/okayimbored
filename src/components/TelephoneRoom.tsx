@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PixelCat, type CatState } from './LivingCats/PixelCat';
 import { motion, AnimatePresence } from 'framer-motion';
 import { addEcho, hasEcho } from '../lib/echoes';
+import { useExperienceStore } from '../lib/store';
 
 type RoomState = 'IDLE' | 'RINGING' | 'ANSWERED' | 'MISSED';
 
@@ -34,6 +35,7 @@ export default function TelephoneRoom() {
   const [currentLineIdx, setCurrentLineIdx] = useState(0);
   const [catIntegration, setCatIntegration] = useState<CatIntegration>('NONE');
   const [microcopy, setMicrocopy] = useState('');
+  const { hasInPocket } = useExperienceStore();
   
   const ringTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const missedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -113,6 +115,20 @@ export default function TelephoneRoom() {
     addEcho('answered_telephone');
   };
 
+  const handleDialNumber = () => {
+    setRoomState('ANSWERED');
+    setCallDialogue([
+      'Dialing...',
+      'Ringing...',
+      '(Click)',
+      '(Heavy static...)',
+      '"They found it."',
+      '"They finally found it."',
+      '(Click)'
+    ]);
+    setCurrentLineIdx(0);
+  };
+
   if (!mounted) return null;
 
   return (
@@ -181,9 +197,19 @@ export default function TelephoneRoom() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="text-xs text-white/30 italic"
+                className="flex flex-col items-center gap-4"
               >
-                {microcopy}
+                <div className="text-xs text-white/30 italic">
+                  {microcopy}
+                </div>
+                {hasInPocket('Handwritten Number') && (
+                  <button 
+                    onClick={handleDialNumber}
+                    className="text-[10px] tracking-widest uppercase text-white/40 hover:text-white border border-white/10 hover:border-white/30 px-4 py-1 transition-colors"
+                  >
+                    Dial Handwritten Number
+                  </button>
+                )}
               </motion.div>
             )}
 

@@ -1,9 +1,9 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import BuildingLayout from '../layouts/BuildingLayout.astro';
 import LostAndFoundComponent from '../components/LostAndFound';
 ---
 
-<Layout title="Lost & Found" noindex={true}>
+<BuildingLayout title="Lost & Found" noindex={true}>
   <div class="flex flex-col items-center min-h-[100dvh] absolute inset-0 w-full overflow-hidden select-none bg-[#030303]">
     {/* Header */}
     <div class="z-20 mt-16 md:mt-24 text-center pointer-events-none px-4 w-full">
@@ -18,4 +18,4 @@ import LostAndFoundComponent from '../components/LostAndFound';
     {/* The Items */}
     <LostAndFoundComponent client:load />
   </div>
-</Layout>
+</BuildingLayout>

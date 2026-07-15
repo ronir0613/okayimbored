@@ -14,8 +14,8 @@ import { DebugOverlay } from './station/DebugOverlay';
 import { MusicPlayer } from './MusicPlayer';
 import { SignboardScene } from './SignboardScene';
 import { DoorScene } from './DoorScene';
-import { ReceptionScene } from './ReceptionScene';
-import MicroWidget from './MicroWidget';
+
+
 import type { FSMState } from './station/stationTypes';
 
 /**
@@ -76,7 +76,7 @@ export function TheStation() {
   
   const [userDeclinedBoarding, setUserDeclinedBoarding] = useState(false);
   const [scenePhase, setScenePhase] = useState<'station' | 'where' | 'transition' | 'signboard' | 'door' | 'reception'>('station');
-  const [isCheckedIn, setIsCheckedIn] = useState(false);
+
 
   useEffect(() => {
     if (!canBoard) {
@@ -112,6 +112,28 @@ export function TheStation() {
       timeoutsRef.current = [];
     }
   }, [boarded, sceneTriggered]);
+
+  // Handle scenePhase changes to override music volume
+  useEffect(() => {
+    if (scenePhase === 'transition' || scenePhase === 'signboard') {
+      window.dispatchEvent(new CustomEvent('music:override', { detail: { volume: 0.1 } }));
+    } else {
+      window.dispatchEvent(new CustomEvent('music:override', { detail: { volume: undefined } }));
+    }
+  }, [scenePhase]);
+
+  // Listen for music player state to lower SFX
+  useEffect(() => {
+    const handleMusicPlay = (e: any) => {
+      if (e.detail?.isPlaying) {
+        setSFXVolume(0.3, 1.0);
+      } else {
+        setSFXVolume(1.0, 1.0);
+      }
+    };
+    window.addEventListener('music:playing', handleMusicPlay);
+    return () => window.removeEventListener('music:playing', handleMusicPlay);
+  }, [setSFXVolume]);
 
   // Clean up timeouts on unmount
   useEffect(() => {
@@ -502,6 +524,7 @@ export function TheStation() {
               setScenePhase('station');
               resetBoarding();
               setSFXVolume(1.0, 2); // Restore SFX volume
+              window.dispatchEvent(new CustomEvent('music:override', { detail: { volume: undefined } }));
             }}
             onFollowCat={() => {
               setScenePhase('door');
@@ -509,22 +532,9 @@ export function TheStation() {
           />
         )}
         {scenePhase === 'door' && (
-          <DoorScene key="door" onEnter={() => setScenePhase('reception')} />
-        )}
-        {scenePhase === 'reception' && (
-          <ReceptionScene key="reception" onCheckIn={() => setIsCheckedIn(true)} />
+          <DoorScene key="door" onEnter={() => window.location.href = '/reception'} />
         )}
       </AnimatePresence>
-
-      {isCheckedIn && <MicroWidget className="z-[100]" />}
-
-      {/* ─── Music Player ────────────────────────────────────────────────────── */}
-      <MusicPlayer 
-        setSFXVolume={setSFXVolume} 
-        volumeOverride={
-          (scenePhase === 'transition' || scenePhase === 'signboard') ? 0.1 : undefined
-        } 
-      />
 
       {/* ─── Development debug overlay ────────────────────────────────────── */}
       <DebugOverlay info={debugInfo} />

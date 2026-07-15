@@ -1,0 +1,37 @@
+---
+import Layout from './Layout.astro';
+import { PocketWidget } from '../components/PocketWidget';
+import { ReturnToReception } from '../components/ReturnToReception';
+import { LivingBuilding } from '../components/LivingBuilding';
+import MicroWidget from '../components/MicroWidget';
+import { MusicPlayer } from '../components/MusicPlayer';
+
+interface Props {
+  title?: string;
+  description?: string;
+  mainClass?: string;
+  noindex?: boolean;
+  backUrl?: string;
+  backText?: string;
+}
+
+const { 
+  title = "The Building", 
+  description = "A quiet building.", 
+  mainClass = "w-full h-full min-h-[100dvh]", 
+  noindex = true,
+  backUrl = "/lobby",
+  backText = "← Return Back"
+} = Astro.props;
+---
+
+<Layout title={title} description={description} mainClass={mainClass} noindex={noindex} hideWidgets={true}>
+  <slot />
+  <PocketWidget client:load />
+  <ReturnToReception backUrl={backUrl} backText={backText} client:load />
+  <LivingBuilding client:load />
+  <MicroWidget client:idle transition:persist="micro-widget" />
+  <div transition:persist="music-player">
+    <MusicPlayer client:load setSFXVolume={() => {}} />
+  </div>
+</Layout>

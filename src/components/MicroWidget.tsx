@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCurrentShift } from '../lib/shift';
+import { useExperienceStore } from '../lib/store';
 
 const RARE_STATES_BY_SHIFT: Record<string, {chars: string[], bottom: string}[]> = {
   day: [
@@ -28,11 +29,11 @@ const RARE_STATES_BY_SHIFT: Record<string, {chars: string[], bottom: string}[]> 
 
 export default function MicroWidget({ className = 'z-0' }: { className?: string }) {
   const [mounted, setMounted] = useState(false);
+  const hasCheckedIn = useExperienceStore((state) => state.hasCheckedIn);
   const [displayState, setDisplayState] = useState<{
     chars: string[];
     bottom: string;
   } | null>(null);
-
 
   useEffect(() => {
     // Delay mounting slightly to simulate an old tube warming up
@@ -82,8 +83,7 @@ export default function MicroWidget({ className = 'z-0' }: { className?: string 
       clearInterval(interval);
     };
   }, []);
-
-  if (!displayState) return null;
+  if (!displayState || !hasCheckedIn) return null;
 
   return (
     <div 
