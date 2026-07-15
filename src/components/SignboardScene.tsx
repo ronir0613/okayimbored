@@ -17,6 +17,7 @@ export function SignboardScene({ onGoBack, onFollowCat }: SignboardSceneProps) {
     <motion.div 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
+      exit={{ opacity: 0 }}
       transition={{ duration: 3 }}
       className="fixed inset-0 bg-black z-[70] flex flex-col items-center justify-center overflow-hidden"
     >

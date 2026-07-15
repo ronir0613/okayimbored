@@ -26,7 +26,7 @@ const RARE_STATES_BY_SHIFT: Record<string, {chars: string[], bottom: string}[]> 
   ],
 };
 
-export default function MicroWidget() {
+export default function MicroWidget({ className = 'z-0' }: { className?: string }) {
   const [mounted, setMounted] = useState(false);
   const [displayState, setDisplayState] = useState<{
     chars: string[];
@@ -88,7 +88,7 @@ export default function MicroWidget() {
   return (
     <div 
       id="timestamp-widget"
-      className={`fixed bottom-4 right-4 md:bottom-6 md:right-6 z-0 pointer-events-none transition-opacity duration-[3000ms] ${mounted ? 'opacity-70' : 'opacity-0'}`}
+      className={`fixed bottom-4 right-4 md:bottom-6 md:right-6 pointer-events-none transition-opacity duration-[3000ms] ${mounted ? 'opacity-70' : 'opacity-0'} ${className}`}
       style={{
         fontFamily: "'Space Mono', monospace",
       }}

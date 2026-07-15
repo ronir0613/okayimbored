@@ -13,6 +13,9 @@ import { useTrainStation } from './station/useTrainStation';
 import { DebugOverlay } from './station/DebugOverlay';
 import { MusicPlayer } from './MusicPlayer';
 import { SignboardScene } from './SignboardScene';
+import { DoorScene } from './DoorScene';
+import { ReceptionScene } from './ReceptionScene';
+import MicroWidget from './MicroWidget';
 import type { FSMState } from './station/stationTypes';
 
 /**
@@ -72,7 +75,8 @@ export function TheStation() {
   const { lightsFlickering, birdLanded } = useMicroEvents();
   
   const [userDeclinedBoarding, setUserDeclinedBoarding] = useState(false);
-  const [scenePhase, setScenePhase] = useState<'station' | 'where' | 'transition' | 'signboard'>('station');
+  const [scenePhase, setScenePhase] = useState<'station' | 'where' | 'transition' | 'signboard' | 'door' | 'reception'>('station');
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
 
   useEffect(() => {
     if (!canBoard) {
@@ -475,17 +479,44 @@ export function TheStation() {
         )}
       </AnimatePresence>
 
-      {/* ─── Post-Train Signboard Scene ──────────────────────────────────────── */}
+      {/* ─── Post-Train Scenes (Signboard, Door, Reception) ────────────────── */}
       <AnimatePresence>
-        {scenePhase === 'signboard' && (
-          <SignboardScene onGoBack={() => {
-            // User chose to go back:
-            setScenePhase('station');
-            resetBoarding();
-            setSFXVolume(1.0, 2); // Restore SFX volume
-          }} />
+        {(scenePhase === 'signboard' || scenePhase === 'door' || scenePhase === 'reception') && (
+          <motion.div
+            key="persistent-black-bg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2 }}
+            className="fixed inset-0 bg-black z-[65] pointer-events-none"
+          />
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {scenePhase === 'signboard' && (
+          <SignboardScene 
+            key="signboard"
+            onGoBack={() => {
+              // User chose to go back:
+              setScenePhase('station');
+              resetBoarding();
+              setSFXVolume(1.0, 2); // Restore SFX volume
+            }}
+            onFollowCat={() => {
+              setScenePhase('door');
+            }}
+          />
+        )}
+        {scenePhase === 'door' && (
+          <DoorScene key="door" onEnter={() => setScenePhase('reception')} />
+        )}
+        {scenePhase === 'reception' && (
+          <ReceptionScene key="reception" onCheckIn={() => setIsCheckedIn(true)} />
+        )}
+      </AnimatePresence>
+
+      {isCheckedIn && <MicroWidget className="z-[100]" />}
 
       {/* ─── Music Player ────────────────────────────────────────────────────── */}
       <MusicPlayer 
