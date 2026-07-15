@@ -59,6 +59,9 @@ export interface TrainStationState {
   /** Whether the train wagons are currently interactable for boarding */
   canBoard: boolean;
 
+  /** Reset boarded state to false */
+  resetBoarding: () => void;
+
   /** Time-of-day audio adjustment — call whenever timeOfDay changes */
   setTimeOfDay: (tod: 'morning' | 'afternoon' | 'evening' | 'night') => void;
 
@@ -154,6 +157,10 @@ export function useTrainStation(): TrainStationState {
     setBoarded(true);
     schedulerRef.current?.triggerBoarding();
   }, [fsmState]);
+
+  const resetBoarding = useCallback(() => {
+    setBoarded(false);
+  }, []);
 
   // ── Time-of-Day & Volume ──────────────────────────────────────────────────
 
@@ -260,6 +267,7 @@ export function useTrainStation(): TrainStationState {
     initStation,
     handleBoard,
     canBoard: BOARDABLE_STATES.includes(fsmState),
+    resetBoarding,
     setTimeOfDay,
     setSFXVolume,
     debugInfo,

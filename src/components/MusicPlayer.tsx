@@ -5,11 +5,13 @@ import { STATION_TRACKS } from './station/tracks';
 interface MusicPlayerProps {
   /** Callback to lower station SFX. (level, fadeSec) */
   setSFXVolume: (level: number, fadeSec?: number) => void;
+  /** Optional override for the maximum music volume */
+  volumeOverride?: number;
 }
 
 const MAX_MUSIC_VOLUME = 0.4;
 
-export function MusicPlayer({ setSFXVolume }: MusicPlayerProps) {
+export function MusicPlayer({ setSFXVolume, volumeOverride }: MusicPlayerProps) {
   const [acquired, setAcquired] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -20,12 +22,38 @@ export function MusicPlayer({ setSFXVolume }: MusicPlayerProps) {
   const activeAudio = useRef<'A' | 'B'>('A');
   const fadeIntervalId = useRef<number | null>(null);
 
+  // Determine the effective max volume based on override
+  const currentMaxVolume = volumeOverride !== undefined ? volumeOverride : MAX_MUSIC_VOLUME;
+
+  // Track the actual volume target internally so effect can apply it smoothly
+  useEffect(() => {
+    const targetVol = currentMaxVolume;
+    const currentAudio = activeAudio.current === 'A' ? audioA.current : audioB.current;
+    if (currentAudio && isPlaying) {
+      // Very simple gradual fade over a short duration
+      let currentVol = currentAudio.volume;
+      const step = (targetVol - currentVol) / 20;
+      let steps = 0;
+      const interval = setInterval(() => {
+        steps++;
+        currentVol += step;
+        currentAudio.volume = Math.max(0, Math.min(1, currentVol));
+        if (steps >= 20) {
+          clearInterval(interval);
+          currentAudio.volume = targetVol;
+        }
+      }, 50);
+    } else if (currentAudio && !isPlaying) {
+      currentAudio.volume = targetVol;
+    }
+  }, [currentMaxVolume, isPlaying]);
+
   // Initialize Audio instances only once
   useEffect(() => {
     audioA.current = new Audio();
     audioB.current = new Audio();
-    audioA.current.volume = MAX_MUSIC_VOLUME;
-    audioB.current.volume = MAX_MUSIC_VOLUME;
+    audioA.current.volume = currentMaxVolume;
+    audioB.current.volume = currentMaxVolume;
 
     const handleEnded = () => {
       // Auto-play next track when one ends
@@ -75,18 +103,18 @@ export function MusicPlayer({ setSFXVolume }: MusicPlayerProps) {
     fadeIntervalId.current = window.setInterval(() => {
       stepCount++;
       const ratio = stepCount / steps;
-      nextAudio.volume = ratio * MAX_MUSIC_VOLUME;
+      nextAudio.volume = ratio * currentMaxVolume;
       
-      const prevVol = Math.max(0, MAX_MUSIC_VOLUME - (ratio * MAX_MUSIC_VOLUME));
+      const prevVol = Math.max(0, currentMaxVolume - (ratio * currentMaxVolume));
       prevAudio.volume = prevVol;
       
       if (stepCount >= steps) {
         window.clearInterval(fadeIntervalId.current!);
         prevAudio.pause();
-        prevAudio.volume = MAX_MUSIC_VOLUME; // reset for next time
+        prevAudio.volume = currentMaxVolume; // reset for next time
       }
     }, stepTime);
-  }, []);
+  }, [currentMaxVolume]);
 
   const togglePlayPause = () => {
     const currentAudio = activeAudio.current === 'A' ? audioA.current : audioB.current;
@@ -100,7 +128,7 @@ export function MusicPlayer({ setSFXVolume }: MusicPlayerProps) {
       if (!currentAudio.src) {
         currentAudio.src = STATION_TRACKS[currentTrackIndex].url;
       }
-      currentAudio.volume = MAX_MUSIC_VOLUME;
+      currentAudio.volume = currentMaxVolume;
       const playPromise = currentAudio.play();
       if (playPromise !== undefined) {
         playPromise.catch(e => console.warn('Playback prevented:', e));
@@ -136,7 +164,7 @@ export function MusicPlayer({ setSFXVolume }: MusicPlayerProps) {
     } else {
       // Not playing, just prepare source, don't auto play (or auto play based on preference)
       setIsPlaying(true);
-      nextAudio.volume = MAX_MUSIC_VOLUME;
+      nextAudio.volume = currentMaxVolume;
       const playPromise = nextAudio.play();
       if (playPromise !== undefined) {
         playPromise.catch(e => console.warn('Playback prevented:', e));

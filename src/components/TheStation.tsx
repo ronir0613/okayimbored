@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Train } from './LivingTrain/Train';
 import { PixelCat } from './LivingCats/PixelCat';
@@ -12,6 +12,7 @@ import { CitySkyline } from './CitySkyline';
 import { useTrainStation } from './station/useTrainStation';
 import { DebugOverlay } from './station/DebugOverlay';
 import { MusicPlayer } from './MusicPlayer';
+import { SignboardScene } from './SignboardScene';
 import type { FSMState } from './station/stationTypes';
 
 /**
@@ -51,6 +52,7 @@ export function TheStation() {
     initStation,
     handleBoard,
     canBoard,
+    resetBoarding,
     setTimeOfDay: setAudioTimeOfDay,
     setSFXVolume,
     debugInfo,
@@ -70,12 +72,47 @@ export function TheStation() {
   const { lightsFlickering, birdLanded } = useMicroEvents();
   
   const [userDeclinedBoarding, setUserDeclinedBoarding] = useState(false);
+  const [scenePhase, setScenePhase] = useState<'station' | 'where' | 'transition' | 'signboard'>('station');
 
   useEffect(() => {
     if (!canBoard) {
       setUserDeclinedBoarding(false);
     }
   }, [canBoard]);
+
+  // ── Scene Sequence Effect ───────────────────────────────────────────────
+  const [sceneTriggered, setSceneTriggered] = useState(false);
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    if (boarded && fsmState === 'DEPARTING' && !sceneTriggered) {
+      setSceneTriggered(true);
+      timeoutsRef.current = [
+        setTimeout(() => setScenePhase('where'), 6000), // "Where does it go?" shows at 6s
+        setTimeout(() => {
+          // At 10s: fade out text, drop SFX audio, set music to 0.1
+          setScenePhase('transition');
+          setSFXVolume(0, 5);
+        }, 10000),
+        setTimeout(() => setScenePhase('signboard'), 13000)
+      ];
+    }
+  }, [boarded, fsmState, setSFXVolume, sceneTriggered]);
+
+  useEffect(() => {
+    // When returning to station explicitly
+    if (!boarded && sceneTriggered) {
+      setSceneTriggered(false);
+      setScenePhase('station');
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current = [];
+    }
+  }, [boarded, sceneTriggered]);
+
+  // Clean up timeouts on unmount
+  useEffect(() => {
+    return () => timeoutsRef.current.forEach(clearTimeout);
+  }, []);
 
   // ── Mount effect ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -421,20 +458,42 @@ export function TheStation() {
             transition={{ duration: 4, delay: 2 }}
             className="fixed inset-0 bg-black z-[60] flex items-center justify-center pointer-events-none"
           >
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 6, duration: 2 }}
-              className="text-white/30 text-sm tracking-[0.3em] font-serif uppercase"
-            >
-              Where does it go?
-            </motion.p>
+            <AnimatePresence>
+              {(scenePhase === 'where' || scenePhase === 'station') && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: scenePhase === 'where' ? 1 : 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 2 }}
+                  className="text-white/30 text-sm tracking-[0.3em] font-serif uppercase"
+                >
+                  Where does it go?
+                </motion.p>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* ─── Post-Train Signboard Scene ──────────────────────────────────────── */}
+      <AnimatePresence>
+        {scenePhase === 'signboard' && (
+          <SignboardScene onGoBack={() => {
+            // User chose to go back:
+            setScenePhase('station');
+            resetBoarding();
+            setSFXVolume(1.0, 2); // Restore SFX volume
+          }} />
+        )}
+      </AnimatePresence>
+
       {/* ─── Music Player ────────────────────────────────────────────────────── */}
-      <MusicPlayer setSFXVolume={setSFXVolume} />
+      <MusicPlayer 
+        setSFXVolume={setSFXVolume} 
+        volumeOverride={
+          (scenePhase === 'transition' || scenePhase === 'signboard') ? 0.1 : undefined
+        } 
+      />
 
       {/* ─── Development debug overlay ────────────────────────────────────── */}
       <DebugOverlay info={debugInfo} />
