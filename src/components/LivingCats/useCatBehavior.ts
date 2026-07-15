@@ -9,9 +9,11 @@ export function useCatBehavior(stationState?: string) {
   const [catWalkDuration, setCatWalkDuration] = useState(0);
   const [isBoarding, setIsBoarding] = useState(false);
   const [catY, setCatY] = useState(0); // 0 is default bottom
+  const [catWillBoard, setCatWillBoard] = useState(true); // Track if cat decided to board this train
   
   const isTransitioningRef = useRef(false);
   const positionRef = useRef(60);
+  const hasRolledRef = useRef(false);
   const stationStateRef = useRef(stationState);
 
   // Sync station state ref
@@ -24,31 +26,36 @@ export function useCatBehavior(stationState?: string) {
     let timeout: ReturnType<typeof setTimeout>;
     
     if (stationState === 'DOORS_OPEN') {
-      // Start boarding sequence after a small delay
-      timeout = setTimeout(() => {
-        setIsBoarding(true);
-        const goLeft = positionRef.current > 50;
-        setCatState(goLeft ? 'walking_left' : 'walking_right');
-        setCatWalkDuration(4000); // 4 seconds to walk up
-        
-        // Move diagonally
-        setCatY(30); // Move up by 30% of platform
-        const newPos = goLeft ? positionRef.current - 15 : positionRef.current + 15;
-        setCatPosition(newPos);
-        positionRef.current = newPos;
-        
-        // Disappear after walking up
-        setTimeout(() => {
-          setIsVisible(false);
-          setCatState('idle');
-          setCatWalkDuration(0);
-        }, 4000);
-      }, 1000 + Math.random() * 2000);
+      if (catWillBoard) {
+        // Start boarding sequence after a small delay
+        timeout = setTimeout(() => {
+          setIsBoarding(true);
+          const goLeft = positionRef.current > 50;
+          setCatState(goLeft ? 'walking_left' : 'walking_right');
+          setCatWalkDuration(4000); // 4 seconds to walk up
+          
+          // Move diagonally
+          setCatY(30); // Move up by 30% of platform
+          const newPos = goLeft ? positionRef.current - 15 : positionRef.current + 15;
+          setCatPosition(newPos);
+          positionRef.current = newPos;
+          
+          // Disappear after walking up
+          setTimeout(() => {
+            setIsVisible(false);
+            setCatState('idle');
+            setCatWalkDuration(0);
+          }, 4000);
+        }, 1000 + Math.random() * 2000);
+      }
     } else if (stationState === 'DEPARTING_EMPTY' || stationState === 'DEPARTING_BOARDED') {
-      // When train leaves, prepare a new cat
-      setIsBoarding(false);
-      setCatY(0);
-      setIsVisible(false); // Make sure it's hidden before arriving
+      if (catWillBoard) {
+        // When train leaves, prepare a new cat only if it boarded
+        setIsBoarding(false);
+        setCatY(0);
+        setIsVisible(false); // Make sure it's hidden before arriving
+      }
+      hasRolledRef.current = false; // Reset roll for next train
     } else if (stationState === 'WAITING_EMPTY' && !isVisible) {
       // Come back from left or right
       timeout = setTimeout(() => {
@@ -76,6 +83,10 @@ export function useCatBehavior(stationState?: string) {
         }, 100);
       }, 3000 + Math.random() * 5000); // Wait 3-8s after station is empty
     } else if (stationState === 'APPROACHING' || stationState === 'BRAKING') {
+      if (!hasRolledRef.current) {
+        hasRolledRef.current = true;
+        setCatWillBoard(Math.random() > 0.4);
+      }
       // Wake up when train is arriving
       setCatState((prev) => {
         if (prev === 'sleeping' || prev === 'idle_to_sleeping') {
@@ -93,5 +104,5 @@ export function useCatBehavior(stationState?: string) {
 
   // Remove the random pickNextAction behavior completely
   // The cat will just follow the deterministic boarding and sleeping cycle.
-  return { catState, catPosition, isVisible, catWalkDuration, isBoarding, catY };
+  return { catState, catPosition, isVisible, catWalkDuration, isBoarding, catY, catWillBoard };
 }

@@ -66,8 +66,16 @@ export function TheStation() {
   const [middleLightPhase, setMiddleLightPhase] = useState<'off' | 'flicker' | 'on'>('off');
 
   const legacyState = useMemo(() => toLegacyState(fsmState), [fsmState]);
-  const { catState, catPosition, isVisible: isCatVisible, catWalkDuration, isBoarding, catY } = useCatBehavior(legacyState);
+  const { catState, catPosition, isVisible: isCatVisible, catWalkDuration, isBoarding, catY, catWillBoard } = useCatBehavior(legacyState);
   const { lightsFlickering, birdLanded } = useMicroEvents();
+  
+  const [userDeclinedBoarding, setUserDeclinedBoarding] = useState(false);
+
+  useEffect(() => {
+    if (!canBoard) {
+      setUserDeclinedBoarding(false);
+    }
+  }, [canBoard]);
 
   // ── Mount effect ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -289,7 +297,7 @@ export function TheStation() {
               stationary={true}
               showTracks={false}
               onBoard={handleBoard}
-              isInteractable={canBoard}
+              isInteractable={canBoard && catWillBoard && !userDeclinedBoarding}
               timeOfDay={timeOfDay}
               className={`drop-shadow-[0_-5px_15px_rgba(0,0,0,0.5)] transition-all duration-3000 ${
                 timeOfDay === 'night'
@@ -376,6 +384,33 @@ export function TheStation() {
         )}
       </div>
       </div>
+
+      {/* ─── Boarding Choices ──────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {canBoard && catWillBoard && !userDeclinedBoarding && !boarded && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[150px] flex gap-4 z-[100] pointer-events-auto"
+          >
+            <button
+              onClick={(e) => { e.stopPropagation(); handleBoard(); }}
+              className="bg-white text-black font-mono text-sm px-4 py-2 hover:bg-gray-200 transition-colors uppercase tracking-widest cursor-pointer border-[3px] border-black shadow-[4px_4px_0_rgba(0,0,0,1)]"
+              style={{ imageRendering: 'pixelated' }}
+            >
+              Enter
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setUserDeclinedBoarding(true); }}
+              className="bg-white text-black font-mono text-sm px-4 py-2 hover:bg-gray-200 transition-colors uppercase tracking-widest cursor-pointer border-[3px] border-black shadow-[4px_4px_0_rgba(0,0,0,1)]"
+              style={{ imageRendering: 'pixelated' }}
+            >
+              No
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ─── Boarding fade-to-black ─────────────────────────────────────────── */}
       <AnimatePresence>

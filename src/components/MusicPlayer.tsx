@@ -150,7 +150,7 @@ export function MusicPlayer({ setSFXVolume }: MusicPlayerProps) {
         {!acquired && (
           <motion.div
             layoutId="music-player-container"
-            className="absolute bottom-12 right-12 md:bottom-24 md:right-32 cursor-pointer pointer-events-auto"
+            className="absolute bottom-12 left-12 md:bottom-24 md:left-32 cursor-pointer pointer-events-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8 }}
