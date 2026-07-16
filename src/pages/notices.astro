@@ -6,31 +6,5 @@ import NoticeBoard from '../components/NoticeBoard';
 <BuildingLayout title="The Notice Board" noindex={true} mainClass="w-full max-w-none p-0 flex-1 flex flex-col">
   <div class="relative w-full h-screen bg-[#050505]">
     <NoticeBoard client:load />
-    
-    <div class="absolute top-8 left-8 sm:top-16 sm:left-16 z-50">
-      <button 
-        id="notices-return-btn" 
-        class="text-[10px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-[0.3em] font-mono cursor-pointer bg-transparent border-none"
-      >
-        return.
-      </button>
-    </div>
   </div>
 </BuildingLayout>
-
-<script>
-  import { navigate } from 'astro:transitions/client';
-  
-  const setupNoticesReturn = () => {
-    const btn = document.getElementById('notices-return-btn');
-    if (btn) {
-      btn.addEventListener('click', () => {
-        sessionStorage.setItem('okayimbored_returning_from_secret', 'true');
-        navigate('/');
-      });
-    }
-  };
-
-  setupNoticesReturn();
-  document.addEventListener('astro:page-load', setupNoticesReturn);
-</script>
